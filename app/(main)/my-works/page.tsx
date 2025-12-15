@@ -1,0 +1,207 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useUserStore } from '@/store/userStore';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { Eye, Edit2, Trash2, Heart, MessageCircle } from 'lucide-react';
+
+interface Work {
+  id: string;
+  userId: string;
+  templateId: string | null;
+  imageUrl: string;
+  likesCount: number;
+  commentsCount: number;
+  viewsCount: number;
+  title: string | null;
+  promptUsed: string | null;
+  additionalPrompt: string | null;
+  isPublished: boolean;
+  createdAt: string;
+}
+
+export default function MyWorksPage() {
+  const router = useRouter();
+  const tCommon = useTranslations('common');
+  const tProfile = useTranslations('profile');
+  const { user } = useUserStore();
+  const [works, setWorks] = useState<Work[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchWorks();
+  }, [user]);
+
+  const fetchWorks = async () => {
+    try {
+      const response = await fetch('/api/works');
+      if (!response.ok) throw new Error('Failed to fetch works');
+      const data = await response.json();
+      setWorks(data);
+    } catch (error) {
+      console.error('Error fetching works:', error);
+      toast.error(tProfile('works.loadError') || 'Failed to load works');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (workId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    if (!confirm(tProfile('works.deleteConfirm') || 'Are you sure you want to delete this work?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/works/${workId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete work');
+
+      setWorks(works.filter((w) => w.id !== workId));
+      toast.success(tProfile('works.deleteSuccess') || 'Work deleted successfully');
+    } catch (error) {
+      console.error('Error deleting work:', error);
+      toast.error(tProfile('works.deleteError') || 'Failed to delete work');
+    }
+  };
+
+  const handleView = (workId: string) => {
+    router.push(`/works/${workId}`);
+  };
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <p className="text-muted-foreground">{tProfile('works.pleaseSignIn') || 'Please sign in to view your works'}</p>
+        <Link href="/signin" className="mt-4 inline-block text-primary hover:underline">
+          {tProfile('goToSignIn') || 'Sign In'}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-4xl font-bold">{tProfile('works.title') || 'My Works'}</h1>
+        <div className="text-sm text-muted-foreground">
+          {works.length} {works.length === 1 ? (tCommon('work') || 'work') : (tCommon('works') || 'works')}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="aspect-square w-full" />
+              <div className="p-4">
+                <Skeleton className="mb-2 h-6 w-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : works.length === 0 ? (
+        <div className="py-16 text-center text-muted-foreground">
+          <p className="mb-4">{tProfile('works.noWorks') || 'No works yet'}</p>
+          <Button asChild>
+            <Link href="/templates">{tProfile('works.createFirst') || 'Create your first work'}</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {works.map((work) => (
+            <Card 
+              key={work.id} 
+              className="group overflow-hidden cursor-pointer transition-shadow hover:shadow-lg"
+              onClick={() => handleView(work.id)}
+            >
+              <div className="relative aspect-square overflow-hidden bg-muted">
+                <Image
+                  src={work.imageUrl}
+                  alt={work.title || tCommon('work') || 'Work'}
+                  fill
+                  className="object-cover transition-transform group-hover:scale-105"
+                />
+                
+                {/* Overlay Actions */}
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleView(work.id);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/works/${work.id}`);
+                    }}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={(e) => handleDelete(work.id, e)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="p-4">
+                <h3 className="mb-2 truncate font-semibold">
+                  {work.title || tProfile('works.untitled') || 'Untitled Work'}
+                </h3>
+                <div className="mb-2 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Heart className="h-3 w-3" />
+                    {work.likesCount || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageCircle className="h-3 w-3" />
+                    {work.commentsCount || 0}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    {work.viewsCount || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Badge variant={work.isPublished ? 'default' : 'secondary'}>
+                    {work.isPublished 
+                      ? tProfile('works.published') || 'Published' 
+                      : tProfile('works.draft') || 'Draft'}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(work.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,96 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useUserStore } from '@/store/userStore';
+import { X, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+export function AIProviderBanner() {
+  const t = useTranslations('aiProviderBanner');
+  const router = useRouter();
+  const { user } = useUserStore();
+  const [isVisible, setIsVisible] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!user?.id) {
+        setIsVisible(false);
+        setIsChecking(false);
+        return;
+      }
+
+      // Check if user has dismissed the banner
+      const dismissed = localStorage.getItem('ai_provider_banner_dismissed');
+      if (dismissed === 'true') {
+        setIsVisible(false);
+        setIsChecking(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          const hasToken = !!(data.apiSettings?.openrouter_key);
+          setIsConnected(hasToken);
+          setIsVisible(!hasToken);
+        }
+      } catch (error) {
+        console.error('Failed to check AI provider connection:', error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkConnection();
+  }, [user?.id]);
+
+  const handleClose = () => {
+    localStorage.setItem('ai_provider_banner_dismissed', 'true');
+    setIsVisible(false);
+  };
+
+  const handleClick = () => {
+    router.push('/settings');
+  };
+
+  if (isChecking || !isVisible) {
+    return null;
+  }
+
+  return (
+    <div className="bg-yellow-50 border-b border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between py-3 gap-4">
+          <button
+            onClick={handleClick}
+            className="flex items-start gap-3 flex-1 text-left hover:opacity-80 transition-opacity"
+          >
+            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                {t('title')}
+              </p>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-0.5">
+                {t('description')}
+              </p>
+            </div>
+          </button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="shrink-0 h-8 w-8 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-100 dark:text-yellow-400 dark:hover:text-yellow-200 dark:hover:bg-yellow-900"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">{t('close')}</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
