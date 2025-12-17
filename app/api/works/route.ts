@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(works);
   } catch (error) {
     console.error('Error fetching works:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch works' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch works' }, { status: 500 });
   }
 }
 
@@ -39,10 +36,7 @@ export async function POST(request: NextRequest) {
     const { templateId, imageUrl, metadata } = body;
 
     if (!templateId || !imageUrl) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const worksRepo = await getRepository(UserWork);
@@ -58,10 +52,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(work);
   } catch (error) {
     console.error('Error creating work:', error);
-    return NextResponse.json(
-      { error: 'Failed to create work' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create work' }, { status: 500 });
   }
 }
 
@@ -77,10 +68,7 @@ export async function DELETE(request: NextRequest) {
     const { workId } = body;
 
     if (!workId) {
-      return NextResponse.json(
-        { error: 'Missing work ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing work ID' }, { status: 400 });
     }
 
     const worksRepo = await getRepository(UserWork);
@@ -89,10 +77,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!work) {
-      return NextResponse.json(
-        { error: 'Work not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Work not found' }, { status: 404 });
     }
 
     await worksRepo.remove(work);
@@ -100,9 +85,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting work:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete work' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete work' }, { status: 500 });
   }
 }

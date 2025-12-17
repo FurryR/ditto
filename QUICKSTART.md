@@ -12,11 +12,11 @@ Get Ditto up and running in 5 minutes!
 
 ### 1. Clone and Install (2 minutes)
 
-\`\`\`bash
+```bash
 git clone <your-repo-url> ditto
 cd ditto
 npm install
-\`\`\`
+```
 
 ### 2. Set Up Supabase (2 minutes)
 
@@ -38,22 +38,23 @@ npm install
 
 ### 4. Environment Variables (30 seconds)
 
-\`\`\`bash
+```bash
 cp .env.example .env.local
-\`\`\`
+```
 
 Edit `.env.local`:
-\`\`\`env
+
+```env
 NEXT_PUBLIC_SUPABASE_URL=<from-supabase-api-settings>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<from-supabase-api-settings>
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-\`\`\`
+```
 
 ### 5. Run! (30 seconds)
 
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 Visit [http://localhost:3000](http://localhost:3000)
 
@@ -85,7 +86,8 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 **Build fails**: Run `npm run build` to see specific errors
 
-**Can't sign in**: 
+**Can't sign in**:
+
 - Check GitHub OAuth callback URL matches Supabase
 - Verify environment variables are correct
 
@@ -93,13 +95,13 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ## Development Commands
 
-\`\`\`bash
+```bash
 npm run dev         # Start dev server
 npm run build       # Build for production
 npm run lint        # Check code quality
 npm run format      # Format code
 npm run type-check  # Check TypeScript
-\`\`\`
+```
 
 ## Getting Help
 

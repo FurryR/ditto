@@ -21,7 +21,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userNa
 
       try {
         const response = await fetch(`/api/profile/${resolvedParams.userName}`);
-        
+
         if (!response.ok) {
           setProfile(null);
           setTemplates([]);
@@ -55,7 +55,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userNa
             <Skeleton className="h-40 w-full" />
             <div className="px-6 pb-4">
               <div className="flex items-start gap-6">
-                <Skeleton className="h-20 w-20 rounded-full -mt-10" />
+                <Skeleton className="-mt-10 h-20 w-20 rounded-full" />
                 <div className="flex-1 space-y-3 pt-2">
                   <Skeleton className="h-8 w-48" />
                   <Skeleton className="h-4 w-32" />
@@ -72,7 +72,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userNa
           </Card>
           <div className="space-y-10">
             <section>
-              <Skeleton className="h-8 w-32 mb-6" />
+              <Skeleton className="mb-6 h-8 w-32" />
               <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="mb-4 break-inside-avoid">
@@ -82,7 +82,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userNa
               </div>
             </section>
             <section>
-              <Skeleton className="h-8 w-32 mb-6" />
+              <Skeleton className="mb-6 h-8 w-32" />
               <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="mb-4 break-inside-avoid">

@@ -61,7 +61,7 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
         const response = await fetch('/api/settings');
         if (response.ok) {
           const data = await response.json();
-          setHasOpenRouterKey(!!(data.apiSettings?.openrouter_key));
+          setHasOpenRouterKey(!!data.apiSettings?.openrouter_key);
         }
       } catch (error) {
         console.error('Failed to check OpenRouter key:', error);
@@ -229,10 +229,10 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
 
   const handleUpscale = async () => {
     if (!generatedImage) return;
-    
+
     setIsUpscaling(true);
     setUpscaleProgress(0);
-    
+
     try {
       // Load the image into a canvas
       const img = new window.Image();
@@ -242,22 +242,24 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
         img.onerror = reject;
         img.src = generatedImage;
       });
-      
+
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Failed to get canvas context');
       ctx.drawImage(img, 0, 0);
-      
+
       // Check image size before upscaling
       const MAX_DIMENSION = 4096;
       if (canvas.width > MAX_DIMENSION || canvas.height > MAX_DIMENSION) {
-        throw new Error(`Image is too large for upscaling. Maximum dimension is ${MAX_DIMENSION}px, but image is ${canvas.width}x${canvas.height}.`);
+        throw new Error(
+          `Image is too large for upscaling. Maximum dimension is ${MAX_DIMENSION}px, but image is ${canvas.width}x${canvas.height}.`
+        );
       }
-      
+
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
+
       // Upscale with progress tracking (runs in Web Worker)
       const upscaledData = await upscaleImage(
         imageData,
@@ -267,7 +269,7 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
           setUpscaleProgress(progress.percentage);
         }
       );
-      
+
       // Convert result to data URL
       const resultCanvas = document.createElement('canvas');
       resultCanvas.width = upscaledData.width;
@@ -276,7 +278,7 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
       if (!resultCtx) throw new Error('Failed to get result canvas context');
       resultCtx.putImageData(upscaledData, 0, 0);
       const upscaledDataUrl = resultCanvas.toDataURL('image/png');
-      
+
       setUpscaledImage(upscaledDataUrl);
       setGeneratedImage(upscaledDataUrl);
       toast.success(t('toast.upscaleDone'));
@@ -317,20 +319,23 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
           {/* Character Images Upload */}
           <div className="space-y-3">
             <Label>
-              {t('characterImages', { current: characterImages.length, total: template.numCharacters })}
+              {t('characterImages', {
+                current: characterImages.length,
+                total: template.numCharacters,
+              })}
             </Label>
             <div className="flex flex-wrap gap-2">
               {characterImages.map((image) => (
                 <div
                   key={image.id}
-                  className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-border"
+                  className="border-border relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2"
                 >
                   <Image src={image.preview} alt="Character" fill className="object-cover" />
                   <Button
                     type="button"
                     variant="destructive"
                     size="icon"
-                    className="absolute right-1 top-1 h-6 w-6 rounded-full"
+                    className="absolute top-1 right-1 h-6 w-6 rounded-full"
                     onClick={() => handleRemoveImage(image.id)}
                   >
                     <X className="h-3 w-3" />
@@ -341,9 +346,9 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
               {canAddMoreImages && (
                 <label
                   htmlFor="character-upload"
-                  className="flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 transition-colors hover:border-muted-foreground/50"
+                  className="border-muted-foreground/25 bg-muted/50 hover:border-muted-foreground/50 flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-colors"
                 >
-                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <Upload className="text-muted-foreground h-6 w-6" />
                   <input
                     id="character-upload"
                     type="file"
@@ -370,13 +375,13 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
 
           {/* OpenRouter Warning */}
           {!checkingKey && !hasOpenRouterKey && (
-            <div className="flex items-start gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-950 p-4 text-sm">
-              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 rounded-lg bg-yellow-50 p-4 text-sm dark:bg-yellow-950">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600 dark:text-yellow-400" />
               <div className="flex-1">
                 <p className="font-medium text-yellow-800 dark:text-yellow-200">
                   {t('toast.openRouterNotConnected')}
                 </p>
-                <p className="text-yellow-700 dark:text-yellow-300 mt-1">
+                <p className="mt-1 text-yellow-700 dark:text-yellow-300">
                   {t('toast.connectOpenRouterPrompt')}
                 </p>
               </div>
@@ -390,7 +395,13 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
               className="w-full"
               size="lg"
               onClick={handleGenerate}
-              disabled={characterImages.length === 0 || isUploading || isGenerating || !hasOpenRouterKey || checkingKey}
+              disabled={
+                characterImages.length === 0 ||
+                isUploading ||
+                isGenerating ||
+                !hasOpenRouterKey ||
+                checkingKey
+              }
             >
               {isUploading ? (
                 <>
@@ -417,12 +428,7 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
               <Label>{t('result')}</Label>
               <div className="overflow-hidden rounded-lg border-2">
                 <div className="relative aspect-[4/3]">
-                  <Image
-                    src={generatedImage}
-                    alt="Generated"
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={generatedImage} alt="Generated" fill className="object-cover" />
                 </div>
               </div>
 
@@ -433,9 +439,9 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
                     <span>{t('upscaling')}</span>
                     <span>{upscaleProgress}%</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                     <div
-                      className="h-full bg-primary transition-all duration-300"
+                      className="bg-primary h-full transition-all duration-300"
                       style={{ width: `${upscaleProgress}%` }}
                     />
                   </div>
@@ -446,8 +452,8 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
                 {!upscaledImage && !isUpscaling && (
                   <Button
                     type="button"
-                    variant="outline" 
-                    className="flex-1" 
+                    variant="outline"
+                    className="flex-1"
                     onClick={handleUpscale}
                     disabled={isUpscaling}
                   >
@@ -459,7 +465,12 @@ export function UseTemplateDialog({ open, onOpenChange, template }: UseTemplateD
                   <Download className="mr-2 h-4 w-4" />
                   {t('download')}
                 </Button>
-                <Button type="button" className="flex-1" onClick={handleSave} disabled={isSaving || isUpscaling}>
+                <Button
+                  type="button"
+                  className="flex-1"
+                  onClick={handleSave}
+                  disabled={isSaving || isUpscaling}
+                >
                   {isSaving ? t('saving') : t('saveToMyWorks')}
                 </Button>
               </div>

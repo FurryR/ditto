@@ -5,10 +5,7 @@ import { TemplateStats } from '@/lib/typeorm/entities/TemplateStats';
 import { getCurrentUserId } from '@/lib/typeorm/auth';
 
 // GET /api/templates/[id]/like - Check if user has liked template
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -17,7 +14,7 @@ export async function GET(
 
     const { id: templateId } = await params;
     const likesRepo = await getRepository(TemplateLike);
-    
+
     const like = await likesRepo.findOne({
       where: { userId, templateId },
     });
@@ -30,10 +27,7 @@ export async function GET(
 }
 
 // POST /api/templates/[id]/like - Like template
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {

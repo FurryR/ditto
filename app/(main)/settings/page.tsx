@@ -10,7 +10,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Globe, Github, Twitter, Mail, Send, MessageCircle, Trash2, Plus, ExternalLink, Link as LinkIcon } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Globe,
+  Github,
+  Twitter,
+  Mail,
+  Send,
+  MessageCircle,
+  Trash2,
+  Plus,
+  ExternalLink,
+  Link as LinkIcon,
+  AlertTriangle,
+} from 'lucide-react';
 
 type SocialLink = {
   id: string;
@@ -29,6 +49,7 @@ function SettingsPageContent() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [openRouterConnected, setOpenRouterConnected] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
 
   useEffect(() => {
@@ -51,7 +72,7 @@ function SettingsPageContent() {
         if (data) {
           const links = data.socialLinks || {};
           const linkArray: SocialLink[] = [];
-          
+
           Object.entries(links).forEach(([key, value]) => {
             if (key !== 'banner' && key !== 'github' && value) {
               linkArray.push({
@@ -85,7 +106,7 @@ function SettingsPageContent() {
     // Check for OAuth success/error
     const success = searchParams.get('success');
     const error = searchParams.get('error');
-    
+
     if (success === 'true') {
       toast.success(t('openRouterConnected'));
       setOpenRouterConnected(true);
@@ -120,12 +141,18 @@ function SettingsPageContent() {
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
-      case 'github': return <Github className="h-4 w-4" />;
-      case 'twitter': return <Twitter className="h-4 w-4" />;
-      case 'telegram': return <Send className="h-4 w-4" />;
-      case 'discord': return <MessageCircle className="h-4 w-4" />;
-      case 'email': return <Mail className="h-4 w-4" />;
-      default: return <Globe className="h-4 w-4" />;
+      case 'github':
+        return <Github className="h-4 w-4" />;
+      case 'twitter':
+        return <Twitter className="h-4 w-4" />;
+      case 'telegram':
+        return <Send className="h-4 w-4" />;
+      case 'discord':
+        return <MessageCircle className="h-4 w-4" />;
+      case 'email':
+        return <Mail className="h-4 w-4" />;
+      default:
+        return <Globe className="h-4 w-4" />;
     }
   };
 
@@ -138,17 +165,17 @@ function SettingsPageContent() {
     if (!user?.id) return;
 
     const platform = detectPlatform(newLinkUrl);
-    
+
     // Check if platform already exists
-    if (socialLinks.some(link => link.platform === platform)) {
+    if (socialLinks.some((link) => link.platform === platform)) {
       toast.error(t('platformExists'));
       return;
     }
 
     const updatedLinks = [...socialLinks, { id: platform, platform, url: newLinkUrl }];
     const socialLinksObj: Record<string, string> = {};
-    
-    updatedLinks.forEach(link => {
+
+    updatedLinks.forEach((link) => {
       socialLinksObj[link.platform] = link.url;
     });
 
@@ -175,10 +202,10 @@ function SettingsPageContent() {
   const handleRemoveLink = async (platform: string) => {
     if (!user?.id) return;
 
-    const updatedLinks = socialLinks.filter(link => link.platform !== platform);
+    const updatedLinks = socialLinks.filter((link) => link.platform !== platform);
     const socialLinksObj: Record<string, string> = {};
-    
-    updatedLinks.forEach(link => {
+
+    updatedLinks.forEach((link) => {
       socialLinksObj[link.platform] = link.url;
     });
 
@@ -205,7 +232,7 @@ function SettingsPageContent() {
   const generateCodeVerifier = () => {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
   };
 
   const generateCodeChallenge = async (verifier: string) => {
@@ -215,10 +242,7 @@ function SettingsPageContent() {
     // Convert to base64url format
     const hashArray = Array.from(new Uint8Array(hash));
     const base64 = btoa(String.fromCharCode(...hashArray));
-    return base64
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   };
 
   const handleConnectOpenRouter = async () => {
@@ -227,16 +251,16 @@ function SettingsPageContent() {
     try {
       // Generate code verifier
       const codeVerifier = generateCodeVerifier();
-      
+
       // Generate code challenge
       const codeChallenge = await generateCodeChallenge(codeVerifier);
-      
+
       // Store code verifier in cookie with secure settings
       document.cookie = `openrouter_code_verifier=${codeVerifier}; path=/; max-age=600; SameSite=Lax; Secure`;
-      
+
       // Get current URL for callback
       const callbackUrl = `${window.location.origin}/openrouter/callback?redirect=/settings`;
-      
+
       // Redirect to OpenRouter auth with PKCE
       const authUrl = `https://openrouter.ai/auth?callback_url=${encodeURIComponent(callbackUrl)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
       window.location.href = authUrl;
@@ -253,8 +277,8 @@ function SettingsPageContent() {
       const response = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          apiSettings: { openrouter_key: null } 
+        body: JSON.stringify({
+          apiSettings: { openrouter_key: null },
         }),
       });
 
@@ -271,20 +295,22 @@ function SettingsPageContent() {
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirm !== 'DELETE') {
+    if (deleteConfirm !== user?.githubUsername) {
       toast.error(t('confirmDeleteText'));
       return;
     }
 
     // TODO: Implement account deletion logic
     toast.info(t('deleteRequestSubmitted'));
+    setDeleteDialogOpen(false);
+    setDeleteConfirm('');
   };
 
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
-        <Link href="/signin" className="mt-4 inline-block text-primary hover:underline">
+        <Link href="/signin" className="text-primary mt-4 inline-block hover:underline">
           {tCommon('signIn')}
         </Link>
       </div>
@@ -296,25 +322,25 @@ function SettingsPageContent() {
       <div className="mx-auto max-w-3xl space-y-8">
         <div>
           <h1 className="text-3xl font-bold">{t('title')}</h1>
-          <p className="mt-2 text-muted-foreground">{t('description')}</p>
+          <p className="text-muted-foreground mt-2">{t('description')}</p>
         </div>
 
         {/* Social Links Section */}
         <section className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold">{t('socialLinks')}</h2>
-            <p className="text-sm text-muted-foreground">{t('socialLinksDescription')}</p>
+            <p className="text-muted-foreground text-sm">{t('socialLinksDescription')}</p>
           </div>
 
           <div className="space-y-3">
             {socialLinks.map((link) => (
               <div key={link.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full">
                   {getPlatformIcon(link.platform)}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="font-medium capitalize">{link.platform}</div>
-                  <div className="text-sm text-muted-foreground truncate">{link.url}</div>
+                  <div className="text-muted-foreground truncate text-sm">{link.url}</div>
                 </div>
                 <a
                   href={link.url}
@@ -324,11 +350,7 @@ function SettingsPageContent() {
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveLink(link.platform)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => handleRemoveLink(link.platform)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -356,25 +378,23 @@ function SettingsPageContent() {
         <section className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold">{t('apiSettings')}</h2>
-            <p className="text-sm text-muted-foreground">{t('apiSettingsDescription')}</p>
+            <p className="text-muted-foreground text-sm">{t('apiSettingsDescription')}</p>
           </div>
 
           <Card className="p-6">
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <LinkIcon className="h-5 w-5 text-primary" />
+                <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                  <LinkIcon className="text-primary h-5 w-5" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">OpenRouter</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('openRouterDescription')}
-                  </p>
-                  <a 
-                    href="https://openrouter.ai" 
-                    target="_blank" 
+                  <p className="text-muted-foreground mt-1 text-sm">{t('openRouterDescription')}</p>
+                  <a
+                    href="https://openrouter.ai"
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline mt-2 inline-flex items-center gap-1"
+                    className="text-primary mt-2 inline-flex items-center gap-1 text-sm hover:underline"
                   >
                     {t('learnMore')}
                     <ExternalLink className="h-3 w-3" />
@@ -387,7 +407,9 @@ function SettingsPageContent() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <div className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-muted-foreground">{t('openRouterConnectedStatus')}</span>
+                      <span className="text-muted-foreground">
+                        {t('openRouterConnectedStatus')}
+                      </span>
                     </div>
                     <Button variant="outline" onClick={handleDisconnectOpenRouter}>
                       {t('disconnectOpenRouter')}
@@ -407,32 +429,81 @@ function SettingsPageContent() {
         {/* Danger Zone Section */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold text-destructive">{t('dangerZone')}</h2>
-            <p className="text-sm text-muted-foreground">{t('dangerZoneDescription')}</p>
+            <h2 className="text-destructive text-xl font-semibold">{t('dangerZone')}</h2>
+            <p className="text-muted-foreground text-sm">{t('dangerZoneDescription')}</p>
           </div>
 
-          <Card className="border-destructive p-4">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold">{t('deleteAccount')}</h3>
-                <p className="text-sm text-muted-foreground">{t('deleteAccountWarning')}</p>
+          <Card className="border-destructive p-6">
+            <div className="flex items-start gap-4">
+              <div className="bg-destructive/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                <AlertTriangle className="text-destructive h-5 w-5" />
               </div>
-              <div>
-                <Label htmlFor="delete-confirm">{t('deleteConfirmLabel')}</Label>
-                <Input
-                  id="delete-confirm"
-                  placeholder="DELETE"
-                  value={deleteConfirm}
-                  onChange={(e) => setDeleteConfirm(e.target.value)}
-                />
+              <div className="flex-1 space-y-3">
+                <div>
+                  <h3 className="font-semibold">{t('deleteAccount')}</h3>
+                  <p className="text-muted-foreground mt-1 text-sm">{t('deleteAccountWarning')}</p>
+                </div>
+                <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t('submitDeleteRequest')}
+                </Button>
               </div>
-              <Button variant="destructive" onClick={handleDeleteAccount}>
-                {t('submitDeleteRequest')}
-              </Button>
             </div>
           </Card>
         </section>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              {t('deleteAccountDialogTitle')}
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2 pt-2">
+                <p>{t('deleteAccountDialogDescription')}</p>
+                <p className="font-semibold">{t('deleteAccountDialogWarning')}</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="delete-username-confirm">
+              {t('deleteConfirmLabel')}{' '}
+              <span className="font-mono font-semibold">{user?.githubUsername}</span>
+            </Label>
+            <Input
+              id="delete-username-confirm"
+              placeholder={user?.githubUsername || ''}
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeleteConfirm('');
+              }}
+            >
+              {t('cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirm !== user?.githubUsername}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t('confirmDelete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

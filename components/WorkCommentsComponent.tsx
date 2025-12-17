@@ -35,7 +35,7 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
   const { user } = useUserStore();
   const t = useTranslations('workComments');
   const tCommon = useTranslations('common');
-  
+
   const [comments, setComments] = useState<WorkComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -117,17 +117,19 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
       if (!response.ok) throw new Error('Failed to post reply');
 
       const data = await response.json();
-      
+
       // Update comments with new reply
-      setComments(comments.map(comment => {
-        if (comment.id === parentId) {
-          return {
-            ...comment,
-            replies: [...(comment.replies || []), data.comment],
-          };
-        }
-        return comment;
-      }));
+      setComments(
+        comments.map((comment) => {
+          if (comment.id === parentId) {
+            return {
+              ...comment,
+              replies: [...(comment.replies || []), data.comment],
+            };
+          }
+          return comment;
+        })
+      );
 
       setReplyContent('');
       setReplyTo(null);
@@ -140,8 +142,14 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
     }
   };
 
-  const CommentItem = ({ comment, isReply = false }: { comment: WorkComment; isReply?: boolean }) => (
-    <div className={`flex gap-3 ${isReply ? 'ml-12 mt-3' : ''}`}>
+  const CommentItem = ({
+    comment,
+    isReply = false,
+  }: {
+    comment: WorkComment;
+    isReply?: boolean;
+  }) => (
+    <div className={`flex gap-3 ${isReply ? 'mt-3 ml-12' : ''}`}>
       <Avatar className="h-8 w-8">
         <AvatarImage src={comment.user?.avatarUrl} />
         <AvatarFallback>
@@ -150,21 +158,16 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
       </Avatar>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">
+          <span className="text-sm font-semibold">
             {comment.user?.displayName || comment.user?.githubUsername || 'Anonymous'}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {new Date(comment.createdAt).toLocaleDateString()}
           </span>
         </div>
         <p className="mt-1 text-sm">{comment.content}</p>
         <div className="mt-2 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            disabled
-          >
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" disabled>
             <Heart className="mr-1 h-3 w-3" />
             {comment.likesCount || 0}
           </Button>
@@ -195,7 +198,7 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
                 onClick={() => handleSubmitReply(comment.id)}
                 disabled={submitting || !replyContent.trim()}
               >
-                {submitting ? (t('posting') || 'Posting...') : (t('postReply') || 'Post Reply')}
+                {submitting ? t('posting') || 'Posting...' : t('postReply') || 'Post Reply'}
               </Button>
               <Button
                 size="sm"
@@ -233,9 +236,7 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
             <div className="flex gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback>
-                  {user.name?.[0] || user.githubUsername?.[0] || 'U'}
-                </AvatarFallback>
+                <AvatarFallback>{user.name?.[0] || user.githubUsername?.[0] || 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <Textarea
@@ -245,11 +246,8 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
                   className="mb-3"
                   rows={3}
                 />
-                <Button
-                  onClick={handleSubmitComment}
-                  disabled={submitting || !newComment.trim()}
-                >
-                  {submitting ? (t('posting') || 'Posting...') : (t('postComment') || 'Post Comment')}
+                <Button onClick={handleSubmitComment} disabled={submitting || !newComment.trim()}>
+                  {submitting ? t('posting') || 'Posting...' : t('postComment') || 'Post Comment'}
                 </Button>
               </div>
             </div>
@@ -258,11 +256,11 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
       )}
 
       {loading ? (
-        <div className="text-center text-muted-foreground">
+        <div className="text-muted-foreground text-center">
           {t('loading') || 'Loading comments...'}
         </div>
       ) : comments.length === 0 ? (
-        <div className="text-center text-muted-foreground py-8">
+        <div className="text-muted-foreground py-8 text-center">
           {t('noComments') || 'No comments yet. Be the first to comment!'}
         </div>
       ) : (

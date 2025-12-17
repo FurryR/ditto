@@ -55,20 +55,20 @@ Before you begin, ensure you have the following installed:
 
 ### 1. Clone the Repository
 
-\`\`\`bash
+```bash
 git clone https://github.com/yourusername/ditto.git
 cd ditto
-\`\`\`
+```
 
 ### 2. Install Dependencies
 
-\`\`\`bash
+```bash
 npm install
 
 # or
 
 pnpm install
-\`\`\`
+```
 
 ### 3. Set Up Supabase
 
@@ -91,10 +91,10 @@ pnpm install
 3. Create a GitHub OAuth App:
    - Go to GitHub Settings > Developer settings > OAuth Apps > New OAuth App
    - **Application name**: Ditto (or your preferred name)
-   - **Homepage URL**: \`http://localhost:3000\` (for development)
+   - **Homepage URL**: `http://localhost:3000` (for development)
    - **Authorization callback URL**: Your Supabase Auth callback URL
      - Found in Supabase: Authentication > Providers > GitHub
-     - Format: \`https://<your-project-ref>.supabase.co/auth/v1/callback\`
+     - Format: `https://<your-project-ref>.supabase.co/auth/v1/callback`
 4. Copy the **Client ID** and **Client Secret** to your Supabase GitHub provider settings
 5. Save the configuration
 
@@ -102,13 +102,13 @@ pnpm install
 
 1. Copy the example environment file:
 
-\`\`\`bash
+```bash
 cp .env.example .env.local
-\`\`\`
+```
 
-2. Edit \`.env.local\` with your credentials:
+2. Edit `.env.local` with your credentials:
 
-\`\`\`env
+```env
 
 # Supabase Configuration
 
@@ -126,7 +126,7 @@ REAL_ESRGAN_API_KEY=your-real-esrgan-api-key
 # Site URL (for production)
 
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-\`\`\`
+```
 
 **Where to find Supabase credentials:**
 
@@ -142,19 +142,19 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ### 5. Run the Development Server
 
-\`\`\`bash
+```bash
 npm run dev
 
 # or
 
 pnpm dev
-\`\`\`
+```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📁 Project Structure
 
-\`\`\`
+```
 ditto/
 ├── app/
 │ ├── [locale]/ # Internationalized routes
@@ -191,47 +191,47 @@ ditto/
 ├── types/
 │ └── index.ts # TypeScript types
 └── middleware.ts # Next.js middleware
-\`\`\`
+```
 
 ## 🎨 Customization
 
 ### Adding New Translations
 
-1. Edit the translation files in the \`messages/\` directory:
-   - \`en.json\` - English
-   - \`zh.json\` - Chinese (Simplified)
-   - \`ja.json\` - Japanese
+1. Edit the translation files in the `messages/` directory:
+   - `en.json` - English
+   - `zh.json` - Chinese (Simplified)
+   - `ja.json` - Japanese
 
 2. Add your new keys following the existing structure:
 
-\`\`\`json
+```json
 {
-"common": {
-"newKey": "New translation"
+  "common": {
+    "newKey": "New translation"
+  }
 }
-}
-\`\`\`
+```
 
 3. Use the translation in your components:
 
-\`\`\`tsx
+```tsx
 const t = useTranslations('common');
 // ...
 
-<p>{t('newKey')}</p>
-\`\`\`
+<p>{t('newKey')}</p>;
+```
 
 ### Customizing Theme
 
 The project uses Shadcn UI with Tailwind CSS. To customize:
 
-1. Edit \`app/globals.css\` for color schemes
-2. Modify \`tailwind.config.ts\` for theme extensions
-3. Update \`components.json\` for Shadcn configuration
+1. Edit `app/globals.css` for color schemes
+2. Modify `tailwind.config.ts` for theme extensions
+3. Update `components.json` for Shadcn configuration
 
 ## 🔧 Development Commands
 
-\`\`\`bash
+```bash
 
 # Start development server
 
@@ -260,7 +260,7 @@ npm run format:check
 # Type checking
 
 npm run type-check
-\`\`\`
+```
 
 ## 🚢 Deployment
 
@@ -280,22 +280,22 @@ The application can be deployed to any platform that supports Next.js:
 - **Netlify**: Use the Netlify CLI or connect your GitHub repo
 - **Cloudflare Pages**: Deploy via their dashboard
 - **AWS Amplify**: Connect your repository
-- **Self-hosted**: Build with \`npm run build\` and run with \`npm start\`
+- **Self-hosted**: Build with `npm run build` and run with `npm start`
 
 ### Environment Variables for Production
 
 Make sure to set all environment variables in your deployment platform:
 
-\`\`\`env
+```env
 NEXT_PUBLIC_SUPABASE_URL=your-production-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-production-key
 OPENROUTER_API_KEY=your-api-key
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
-\`\`\`
+```
 
 ## 🔐 Security Considerations
 
-- Never commit \`.env.local\` to version control
+- Never commit `.env.local` to version control
 - Use Supabase Row Level Security (RLS) policies (already configured in schema)
 - Keep your API keys secure and rotate them regularly
 - Configure CORS properly in production
@@ -331,9 +331,9 @@ The following features are planned but not yet implemented:
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
-2. Create your feature branch (\`git checkout -b feature/AmazingFeature\`)
-3. Commit your changes (\`git commit -m 'Add some AmazingFeature'\`)
-4. Push to the branch (\`git push origin feature/AmazingFeature\`)
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## 📄 License

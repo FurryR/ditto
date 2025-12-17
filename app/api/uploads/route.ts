@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import { getProxyUrl } from '@/lib/image-utils';
 
 /**
  * POST /api/uploads
@@ -41,9 +42,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const { data } = supabase.storage.from('upload').getPublicUrl(path);
-    return NextResponse.json({ 
-      url: data.publicUrl,
+    // Return proxy URL instead of public URL for security
+    const proxyUrl = getProxyUrl('upload', path);
+    return NextResponse.json({
+      url: proxyUrl,
     });
   } catch (err) {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });

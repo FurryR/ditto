@@ -23,14 +23,11 @@ interface UpdatePayload {
 }
 
 // GET /api/templates/[id] - Get template details with works and related templates
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const templatesRepo = await getRepository(Template);
-    
+
     // Get template with author and stats
     const template = await templatesRepo.findOne({
       where: { id },
@@ -73,16 +70,18 @@ export async function GET(
     });
 
     // Filter out current template
-    const filtered = relatedTemplates.filter(t => t.id !== id);
+    const filtered = relatedTemplates.filter((t) => t.id !== id);
 
     // Remove prompt template from response for security
     const { promptTemplate, ...templateWithoutPrompt } = template;
 
     // Convert averageRating from decimal string to number
-    const stats = template.stats ? {
-      ...template.stats,
-      averageRating: Number(template.stats.averageRating) || 0,
-    } : undefined;
+    const stats = template.stats
+      ? {
+          ...template.stats,
+          averageRating: Number(template.stats.averageRating) || 0,
+        }
+      : undefined;
 
     return NextResponse.json({
       template: {
@@ -99,18 +98,12 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching template:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch template' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch template' }, { status: 500 });
   }
 }
 
 // PATCH /api/templates/[id] - Update template
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -126,10 +119,7 @@ export async function PATCH(
     });
 
     if (!template) {
-      return NextResponse.json(
-        { error: 'Template not found or unauthorized' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Template not found or unauthorized' }, { status: 404 });
     }
 
     // Update fields
@@ -143,7 +133,8 @@ export async function PATCH(
     if (body.modelName !== undefined) template.modelName = body.modelName;
     if (body.numCharacters !== undefined) template.numCharacters = body.numCharacters;
     if (body.licenseType !== undefined) template.licenseType = body.licenseType;
-    if (body.licenseRestrictions !== undefined) template.licenseRestrictions = body.licenseRestrictions;
+    if (body.licenseRestrictions !== undefined)
+      template.licenseRestrictions = body.licenseRestrictions;
     if (body.isPublished !== undefined) {
       template.isPublished = body.isPublished;
       template.publishedAt = body.isPublished ? new Date() : undefined;
@@ -159,10 +150,7 @@ export async function PATCH(
 }
 
 // DELETE /api/templates/[id] - Delete template
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -176,10 +164,7 @@ export async function DELETE(
     });
 
     if (!template) {
-      return NextResponse.json(
-        { error: 'Template not found or unauthorized' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Template not found or unauthorized' }, { status: 404 });
     }
 
     await templatesRepo.remove(template);

@@ -31,13 +31,11 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="bg-background flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md p-8">
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold">{t('signIn')}</h1>
-          <p className="mb-8 text-muted-foreground">
-            {tSignIn('signInWithGitHub')}
-          </p>
+          <p className="text-muted-foreground mb-8">{tSignIn('signInWithGitHub')}</p>
           <Button onClick={handleGitHubSignIn} size="lg" className="w-full">
             {t('signInWithGitHub')}
           </Button>

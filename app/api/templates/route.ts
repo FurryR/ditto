@@ -26,36 +26,38 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const authorId = searchParams.get('authorId');
-    
+
     const templatesRepo = await getRepository(Template);
-    
+
     // If authorId is provided, get all templates by that author (including unpublished)
     if (authorId) {
       const userId = await getCurrentUserId();
-      
+
       // Only allow users to see their own unpublished templates
       if (userId !== authorId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      
+
       const templates = await templatesRepo.find({
         where: { authorId },
         relations: ['author', 'stats'],
         order: { createdAt: 'DESC' },
       });
-      
+
       // Convert averageRating from decimal string to number
-      const templatesWithStats = templates.map(template => ({
+      const templatesWithStats = templates.map((template) => ({
         ...template,
-        stats: template.stats ? {
-          ...template.stats,
-          averageRating: Number(template.stats.averageRating) || 0,
-        } : undefined,
+        stats: template.stats
+          ? {
+              ...template.stats,
+              averageRating: Number(template.stats.averageRating) || 0,
+            }
+          : undefined,
       }));
-      
+
       return NextResponse.json(templatesWithStats);
     }
-    
+
     // Otherwise, get all published templates
     const templates = await templatesRepo.find({
       where: { isPublished: true },
@@ -65,21 +67,20 @@ export async function GET(request: NextRequest) {
     });
 
     // Convert averageRating from decimal string to number
-    const templatesWithStats = templates.map(template => ({
+    const templatesWithStats = templates.map((template) => ({
       ...template,
-      stats: template.stats ? {
-        ...template.stats,
-        averageRating: Number(template.stats.averageRating) || 0,
-      } : undefined,
+      stats: template.stats
+        ? {
+            ...template.stats,
+            averageRating: Number(template.stats.averageRating) || 0,
+          }
+        : undefined,
     }));
 
     return NextResponse.json(templatesWithStats);
   } catch (error) {
     console.error('Error fetching templates:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch templates' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch templates' }, { status: 500 });
   }
 }
 
@@ -116,6 +117,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // Check if baseImageUrl is from upload bucket and migrate
+      // Supports both proxy URL (/api/image/upload/) and legacy direct URL
       if (baseImageUrl.includes('/upload/')) {
         finalBaseImageUrl = await migrateToFileBucket(baseImageUrl, userId, 'template-base');
       }

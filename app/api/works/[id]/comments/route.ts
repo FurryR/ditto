@@ -7,14 +7,11 @@ import { Profile } from '@/lib/typeorm/entities/Profile';
 import { getCurrentUserId } from '@/lib/typeorm/auth';
 
 // GET /api/works/[id]/comments - Get comments for a work
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: workId } = await params;
     const commentRepo = await getRepository(WorkComment);
-    
+
     const comments = await commentRepo
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.user', 'user')
@@ -43,18 +40,12 @@ export async function GET(
     return NextResponse.json({ comments: commentsWithReplies });
   } catch (error) {
     console.error('Error fetching comments:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch comments' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
   }
 }
 
 // POST /api/works/[id]/comments - Create a comment
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -66,10 +57,7 @@ export async function POST(
     const { content, parentId } = body;
 
     if (!content || content.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
 
     const commentRepo = await getRepository(WorkComment);
@@ -99,9 +87,6 @@ export async function POST(
     return NextResponse.json({ comment: commentWithUser });
   } catch (error) {
     console.error('Error creating comment:', error);
-    return NextResponse.json(
-      { error: 'Failed to create comment' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
   }
 }

@@ -3,19 +3,19 @@ import { getRepository } from '@/lib/typeorm/data-source';
 import { Profile } from '@/lib/typeorm/entities/Profile';
 import { getCurrentUserId } from '@/lib/typeorm/auth';
 import { createClient } from '@/lib/supabase/server';
-import { migrateToFileBucket } from '@/lib/image-utils';
+import { migrateToFileBucket, getProxyUrl } from '@/lib/image-utils';
 
 export async function POST(request: Request) {
   try {
     const userId = await getCurrentUserId();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    
+
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
@@ -35,12 +35,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
 
-    const { data: { publicUrl: uploadUrl } } = supabase.storage
-      .from('upload')
-      .getPublicUrl(uploadPath);
+    // Get proxy URL for the upload
+    const uploadProxyUrl = getProxyUrl('upload', uploadPath);
 
     // Migrate to file bucket for persistence
-    const fileUrl = await migrateToFileBucket(uploadUrl, userId, 'banner');
+    const fileUrl = await migrateToFileBucket(uploadProxyUrl, userId, 'banner');
 
     // Update profile in database
     const profileRepo = await getRepository(Profile);

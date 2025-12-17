@@ -57,7 +57,7 @@ export default function MyWorksPage() {
 
   const handleDelete = async (workId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
+
     if (!confirm(tProfile('works.deleteConfirm') || 'Are you sure you want to delete this work?')) {
       return;
     }
@@ -84,8 +84,10 @@ export default function MyWorksPage() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <p className="text-muted-foreground">{tProfile('works.pleaseSignIn') || 'Please sign in to view your works'}</p>
-        <Link href="/signin" className="mt-4 inline-block text-primary hover:underline">
+        <p className="text-muted-foreground">
+          {tProfile('works.pleaseSignIn') || 'Please sign in to view your works'}
+        </p>
+        <Link href="/signin" className="text-primary mt-4 inline-block hover:underline">
           {tProfile('goToSignIn') || 'Sign In'}
         </Link>
       </div>
@@ -96,8 +98,9 @@ export default function MyWorksPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-bold">{tProfile('works.title') || 'My Works'}</h1>
-        <div className="text-sm text-muted-foreground">
-          {works.length} {works.length === 1 ? (tCommon('work') || 'work') : (tCommon('works') || 'works')}
+        <div className="text-muted-foreground text-sm">
+          {works.length}{' '}
+          {works.length === 1 ? tCommon('work') || 'work' : tCommon('works') || 'works'}
         </div>
       </div>
 
@@ -114,28 +117,31 @@ export default function MyWorksPage() {
           ))}
         </div>
       ) : works.length === 0 ? (
-        <div className="py-16 text-center text-muted-foreground">
+        <div className="text-muted-foreground py-16 text-center">
           <p className="mb-4">{tProfile('works.noWorks') || 'No works yet'}</p>
           <Button asChild>
-            <Link href="/templates">{tProfile('works.createFirst') || 'Create your first work'}</Link>
+            <Link href="/templates">
+              {tProfile('works.createFirst') || 'Create your first work'}
+            </Link>
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
           {works.map((work) => (
-            <Card 
-              key={work.id} 
-              className="group overflow-hidden cursor-pointer transition-shadow hover:shadow-lg"
+            <Card
+              key={work.id}
+              className="group mb-6 cursor-pointer break-inside-avoid overflow-hidden transition-shadow hover:shadow-lg"
               onClick={() => handleView(work.id)}
             >
-              <div className="relative aspect-square overflow-hidden bg-muted">
+              <div className="bg-muted relative w-full overflow-hidden">
                 <Image
                   src={work.imageUrl}
                   alt={work.title || tCommon('work') || 'Work'}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
+                  width={400}
+                  height={400}
+                  className="h-auto w-full object-cover transition-transform group-hover:scale-105"
                 />
-                
+
                 {/* Overlay Actions */}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button
@@ -173,7 +179,7 @@ export default function MyWorksPage() {
                 <h3 className="mb-2 truncate font-semibold">
                   {work.title || tProfile('works.untitled') || 'Untitled Work'}
                 </h3>
-                <div className="mb-2 flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="text-muted-foreground mb-2 flex items-center gap-3 text-xs">
                   <span className="flex items-center gap-1">
                     <Heart className="h-3 w-3" />
                     {work.likesCount || 0}
@@ -189,11 +195,11 @@ export default function MyWorksPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <Badge variant={work.isPublished ? 'default' : 'secondary'}>
-                    {work.isPublished 
-                      ? tProfile('works.published') || 'Published' 
+                    {work.isPublished
+                      ? tProfile('works.published') || 'Published'
                       : tProfile('works.draft') || 'Draft'}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {new Date(work.createdAt).toLocaleDateString()}
                   </span>
                 </div>

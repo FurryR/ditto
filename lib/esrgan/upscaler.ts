@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
  */
 async function detectExecutionProviders(): Promise<string[]> {
   const providers: string[] = [];
-  
+
   // Check WebGPU support (preferred)
   if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
     try {
@@ -31,7 +31,7 @@ async function detectExecutionProviders(): Promise<string[]> {
       console.log('WebGPU not available:', e);
     }
   }
-  
+
   // Check WebGL support (fallback)
   if (typeof document !== 'undefined') {
     try {
@@ -45,10 +45,10 @@ async function detectExecutionProviders(): Promise<string[]> {
       console.log('WebGL not available:', e);
     }
   }
-  
+
   // Always include WASM as fallback
   providers.push('wasm');
-  
+
   return providers;
 }
 
@@ -83,7 +83,7 @@ function calcRenderingParams(
   config: UpscaleConfig
 ): RenderingParams {
   const { scale, offset, tileSize } = config;
-  
+
   const input_offset = Math.ceil(offset / scale);
   const input_blend_size = Math.ceil(BLEND_SIZE / scale);
   const input_tile_step = tileSize - (input_offset * 2 + input_blend_size);
@@ -160,8 +160,14 @@ function tensorToImageData(tensor: ort.Tensor, width: number, height: number): I
       const j = y * width + x;
       const i = y * width * 4 + x * 4;
       rgba[i] = Math.min(255, Math.max(0, (tensor.data[j] as number) * 255.0 + 0.49999));
-      rgba[i + 1] = Math.min(255, Math.max(0, (tensor.data[j + height * width] as number) * 255.0 + 0.49999));
-      rgba[i + 2] = Math.min(255, Math.max(0, (tensor.data[j + 2 * height * width] as number) * 255.0 + 0.49999));
+      rgba[i + 1] = Math.min(
+        255,
+        Math.max(0, (tensor.data[j + height * width] as number) * 255.0 + 0.49999)
+      );
+      rgba[i + 2] = Math.min(
+        255,
+        Math.max(0, (tensor.data[j + 2 * height * width] as number) * 255.0 + 0.49999)
+      );
     }
   }
 
@@ -180,7 +186,7 @@ function cropTensor(
 ): ort.Tensor {
   const [B, C, H, W] = tensor.dims as number[];
   const roi = new Float32Array(B * C * height * width);
-  
+
   let idx = 0;
   for (let b = 0; b < B; b++) {
     const bi = b * C * H * W;
@@ -246,30 +252,30 @@ function reflectionPad(
 function createSeamBlendingFilter(scale: number, offset: number, tileSize: number): ort.Tensor {
   const filterSize = tileSize * scale - offset * 2;
   const filter = new Float32Array(3 * filterSize * filterSize);
-  
+
   for (let c = 0; c < 3; c++) {
     for (let i = 0; i < filterSize; i++) {
       for (let j = 0; j < filterSize; j++) {
         let weight = 1.0;
-        
+
         // Apply blending at borders
         const distTop = i;
         const distBottom = filterSize - 1 - i;
         const distLeft = j;
         const distRight = filterSize - 1 - j;
-        
+
         const minDist = Math.min(distTop, distBottom, distLeft, distRight);
-        
+
         if (minDist < BLEND_SIZE) {
           weight = minDist / BLEND_SIZE;
         }
-        
+
         const idx = c * filterSize * filterSize + i * filterSize + j;
         filter[idx] = weight;
       }
     }
   }
-  
+
   return new ort.Tensor('float32', filter, [3, filterSize, filterSize]);
 }
 
@@ -286,11 +292,11 @@ class SeamBlendingAccumulator {
   constructor(params: RenderingParams, config: UpscaleConfig) {
     this.params = params;
     this.config = config;
-    
+
     const bufferSize = 3 * params.y_buffer_h * params.y_buffer_w;
     this.pixels = new Float32Array(bufferSize);
     this.weights = new Float32Array(bufferSize);
-    
+
     this.blendFilter = createSeamBlendingFilter(config.scale, config.offset, config.tileSize);
   }
 
@@ -299,7 +305,7 @@ class SeamBlendingAccumulator {
     const bufferH = this.params.y_buffer_h;
     const bufferW = this.params.y_buffer_w;
     const stepSize = this.params.output_tile_step;
-    
+
     const startH = stepSize * tileRow;
     const startW = stepSize * tileCol;
 
@@ -308,16 +314,16 @@ class SeamBlendingAccumulator {
         for (let j = 0; j < W; j++) {
           const h = startH + i;
           const w = startW + j;
-          
+
           if (h >= bufferH || w >= bufferW) continue;
-          
+
           const filterIdx = c * H * W + i * W + j;
           const tileIdx = c * H * W + i * W + j;
           const bufferIdx = c * bufferH * bufferW + h * bufferW + w;
-          
+
           const weight = this.blendFilter.data[filterIdx] as number;
           const value = tileTensor.data[tileIdx] as number;
-          
+
           this.pixels[bufferIdx] += value * weight;
           this.weights[bufferIdx] += weight;
         }
@@ -329,11 +335,11 @@ class SeamBlendingAccumulator {
     const bufferH = this.params.y_buffer_h;
     const bufferW = this.params.y_buffer_w;
     const result = new Float32Array(3 * bufferH * bufferW);
-    
+
     for (let i = 0; i < result.length; i++) {
       result[i] = this.weights[i] > 0 ? this.pixels[i] / this.weights[i] : 0;
     }
-    
+
     return new ort.Tensor('float32', result, [3, bufferH, bufferW]);
   }
 }
@@ -360,7 +366,7 @@ class UpscalerWorker {
 
     // Load model from cache or download
     const cachedBuffer = await this.loadModelFromCache(modelPath);
-    
+
     // Create worker
     this.worker = new Worker(new URL('./upscaler.worker.ts', import.meta.url), {
       type: 'module',
@@ -369,7 +375,7 @@ class UpscalerWorker {
     // Wait for model to load in worker
     await new Promise<void>((resolve, reject) => {
       if (!this.worker) return reject(new Error('Worker not initialized'));
-      
+
       const timeoutId = setTimeout(() => {
         reject(new Error('Model loading timeout'));
       }, 60000); // 60 second timeout
@@ -392,16 +398,19 @@ class UpscalerWorker {
       };
 
       // Send model to worker
-      this.worker.postMessage({
-        type: 'loadModel',
-        payload: { modelBuffer: cachedBuffer },
-      }, [cachedBuffer]);
+      this.worker.postMessage(
+        {
+          type: 'loadModel',
+          payload: { modelBuffer: cachedBuffer },
+        },
+        [cachedBuffer]
+      );
     });
   }
 
   private async loadModelFromCache(modelPath: string): Promise<ArrayBuffer> {
     const cacheKey = `model_${modelPath.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    
+
     // Try to load from IndexedDB cache first
     try {
       const cachedBuffer = await getModelFromCache(cacheKey);
@@ -412,12 +421,12 @@ class UpscalerWorker {
     } catch (err) {
       console.warn('Failed to load model from cache:', err);
     }
-    
+
     // Download model
     console.log('Downloading model...');
     const response = await fetch(modelPath);
     const arrayBuffer = await response.arrayBuffer();
-    
+
     // Cache the model to IndexedDB
     try {
       await saveModelToCache(cacheKey, arrayBuffer);
@@ -425,7 +434,7 @@ class UpscalerWorker {
     } catch (err) {
       console.warn('Failed to cache model:', err);
     }
-    
+
     return arrayBuffer;
   }
 
@@ -443,7 +452,7 @@ class UpscalerWorker {
 
       this.worker.onmessage = (e) => {
         const { type, payload } = e.data;
-        
+
         if (type === 'progress' && onProgress) {
           onProgress(payload);
         } else if (type === 'complete') {
@@ -460,15 +469,18 @@ class UpscalerWorker {
       };
 
       // Send upscale request
-      this.worker.postMessage({
-        type: 'upscale',
-        payload: {
-          width: imageData.width,
-          height: imageData.height,
-          imageData: imageData.data,
-          config,
+      this.worker.postMessage(
+        {
+          type: 'upscale',
+          payload: {
+            width: imageData.width,
+            height: imageData.height,
+            imageData: imageData.data,
+            config,
+          },
         },
-      }, [imageData.data.buffer]);
+        [imageData.data.buffer]
+      );
     });
   }
 
@@ -493,10 +505,10 @@ const STORE_NAME = 'models';
 async function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -513,7 +525,7 @@ async function getModelFromCache(key: string): Promise<ArrayBuffer | null> {
       const transaction = db.transaction(STORE_NAME, 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const request = store.get(key);
-      
+
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
     });
@@ -530,7 +542,7 @@ async function saveModelToCache(key: string, data: ArrayBuffer): Promise<void> {
       const transaction = db.transaction(STORE_NAME, 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
       const request = store.put(data, key);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });

@@ -13,7 +13,7 @@ export default function ReportsPage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
-        <Link href="/signin" className="mt-4 inline-block text-primary hover:underline">
+        <Link href="/signin" className="text-primary mt-4 inline-block hover:underline">
           {t('goToSignIn')}
         </Link>
       </div>
@@ -24,7 +24,7 @@ export default function ReportsPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-8 text-4xl font-bold">{t('title')}</h1>
       <Card className="p-8">
-        <p className="text-center text-muted-foreground">{t('noReports')}</p>
+        <p className="text-muted-foreground text-center">{t('noReports')}</p>
       </Card>
     </div>
   );

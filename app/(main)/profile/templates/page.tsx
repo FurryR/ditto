@@ -47,7 +47,7 @@ export default function ProfileTemplatesPage() {
       });
 
       if (!response.ok) throw new Error('Failed to update template');
-      
+
       toast.success(currentStatus ? t('templates.unpublished') : t('templates.published'));
       fetchTemplates();
     } catch (error) {
@@ -61,7 +61,7 @@ export default function ProfileTemplatesPage() {
     try {
       const response = await fetch(`/api/templates/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete template');
-      
+
       toast.success(t('templates.deleted'));
       fetchTemplates();
     } catch (error) {
@@ -74,7 +74,7 @@ export default function ProfileTemplatesPage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
-        <Link href="/signin" className="mt-4 inline-block text-primary hover:underline">
+        <Link href="/signin" className="text-primary mt-4 inline-block hover:underline">
           {t('goToSignIn')}
         </Link>
       </div>
@@ -104,7 +104,7 @@ export default function ProfileTemplatesPage() {
         </div>
       ) : templates.length === 0 ? (
         <Card className="p-16 text-center">
-          <p className="mb-4 text-muted-foreground">{t('templates.noTemplates')}</p>
+          <p className="text-muted-foreground mb-4">{t('templates.noTemplates')}</p>
           <Link href="/studio">
             <Button>{t('templates.createFirst')}</Button>
           </Link>
@@ -113,7 +113,7 @@ export default function ProfileTemplatesPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => (
             <Card key={template.id} className="overflow-hidden">
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+              <div className="bg-muted relative aspect-[4/3] overflow-hidden">
                 <Image
                   src={template.coverImageUrl || template.baseImageUrl}
                   alt={template.name}
@@ -121,12 +121,12 @@ export default function ProfileTemplatesPage() {
                   className="object-cover"
                 />
                 {template.isPublished && (
-                  <Badge className="absolute right-2 top-2">{t('templates.publishedBadge')}</Badge>
+                  <Badge className="absolute top-2 right-2">{t('templates.publishedBadge')}</Badge>
                 )}
               </div>
               <div className="p-4">
                 <h3 className="mb-2 line-clamp-1 font-semibold">{template.name}</h3>
-                <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
                   {template.description}
                 </p>
                 <div className="flex gap-2">
@@ -136,16 +136,18 @@ export default function ProfileTemplatesPage() {
                     onClick={() => handleTogglePublish(template.id, template.isPublished)}
                   >
                     {template.isPublished ? (
-                      <><EyeOff className="mr-1 h-4 w-4" />{t('templates.unpublishAction')}</>
+                      <>
+                        <EyeOff className="mr-1 h-4 w-4" />
+                        {t('templates.unpublishAction')}
+                      </>
                     ) : (
-                      <><Eye className="mr-1 h-4 w-4" />{t('templates.publishAction')}</>
+                      <>
+                        <Eye className="mr-1 h-4 w-4" />
+                        {t('templates.publishAction')}
+                      </>
                     )}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(template.id)}
-                  >
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(template.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

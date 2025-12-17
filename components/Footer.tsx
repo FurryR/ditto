@@ -64,9 +64,19 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t pt-8">
-          <p className="text-muted-foreground text-center text-sm">
-            © {currentYear} {t('appName')}. All rights reserved.
-          </p>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+            <p className="text-muted-foreground text-sm">
+              © {currentYear} {t('appName')}. All rights reserved.
+            </p>
+            <div className="flex gap-4 text-sm">
+              <Link href="/eula" className="text-muted-foreground hover:text-foreground">
+                {t('eula')}
+              </Link>
+              <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
+                {t('privacy')}
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

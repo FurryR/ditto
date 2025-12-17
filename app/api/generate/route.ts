@@ -12,14 +12,14 @@ async function getImageDimensions(url: string): Promise<{ width: number; height:
   const response = await fetch(url);
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  
+
   const dimensions = sizeOf(buffer);
-  
+
   if (!dimensions.width || !dimensions.height) {
     // Fallback to default
     return { width: 1024, height: 1024 };
   }
-  
+
   return { width: dimensions.width, height: dimensions.height };
 }
 
@@ -28,25 +28,25 @@ async function getImageDimensions(url: string): Promise<{ width: number; height:
  */
 function calculateAspectRatio(width: number, height: number): string {
   const ratio = width / height;
-  
+
   // Supported aspect ratios with their numeric values
   const supportedRatios = [
     { label: '1:1', value: 1.0 },
-    { label: '2:3', value: 2/3 },
-    { label: '3:2', value: 3/2 },
-    { label: '3:4', value: 3/4 },
-    { label: '4:3', value: 4/3 },
-    { label: '4:5', value: 4/5 },
-    { label: '5:4', value: 5/4 },
-    { label: '9:16', value: 9/16 },
-    { label: '16:9', value: 16/9 },
-    { label: '21:9', value: 21/9 },
+    { label: '2:3', value: 2 / 3 },
+    { label: '3:2', value: 3 / 2 },
+    { label: '3:4', value: 3 / 4 },
+    { label: '4:3', value: 4 / 3 },
+    { label: '4:5', value: 4 / 5 },
+    { label: '5:4', value: 5 / 4 },
+    { label: '9:16', value: 9 / 16 },
+    { label: '16:9', value: 16 / 9 },
+    { label: '21:9', value: 21 / 9 },
   ];
-  
+
   // Find the closest aspect ratio
   let closest = supportedRatios[0];
   let minDiff = Math.abs(ratio - closest.value);
-  
+
   for (const supported of supportedRatios) {
     const diff = Math.abs(ratio - supported.value);
     if (diff < minDiff) {
@@ -54,14 +54,14 @@ function calculateAspectRatio(width: number, height: number): string {
       closest = supported;
     }
   }
-  
+
   return closest.label;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -70,20 +70,25 @@ export async function POST(request: NextRequest) {
     const { templateId, characterImages, additionalPrompt } = body;
 
     // Validate inputs
-    if (!templateId || !characterImages || !Array.isArray(characterImages) || characterImages.length === 0) {
+    if (
+      !templateId ||
+      !characterImages ||
+      !Array.isArray(characterImages) ||
+      characterImages.length === 0
+    ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Get user's OpenRouter API key
     const profileRepo = await getRepository(Profile);
     const profile = await profileRepo.findOne({ where: { id: userId } });
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     const openRouterKey = profile.apiSettings?.openrouter_key;
-    
+
     if (!openRouterKey) {
       return NextResponse.json({ error: 'OpenRouter API key not configured' }, { status: 403 });
     }
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Get template
     const templateRepo = await getRepository(Template);
     const template = await templateRepo.findOne({ where: { id: templateId } });
-    
+
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
@@ -106,7 +111,7 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
       {
         type: 'text',
         text: preset,
-      }
+      },
     ];
 
     // Add base image if available
@@ -136,7 +141,9 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
       try {
         const dimensions = await getImageDimensions(template.baseImageUrl);
         aspectRatio = calculateAspectRatio(dimensions.width, dimensions.height);
-        console.log(`Base image dimensions: ${dimensions.width}x${dimensions.height}, aspect ratio: ${aspectRatio}`);
+        console.log(
+          `Base image dimensions: ${dimensions.width}x${dimensions.height}, aspect ratio: ${aspectRatio}`
+        );
       } catch (error) {
         console.warn('Failed to get image dimensions, using default 1:1:', error);
       }
@@ -144,13 +151,13 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
 
     // DEVELOPMENT MODE: Return test image instead of calling OpenRouter API
     // Comment out the following block and uncomment the OpenRouter API call below for production
-    const fs = await import('fs').then(m => m.promises);
+    const fs = await import('fs').then((m) => m.promises);
     const path = await import('path');
     const testImagePath = path.join(process.cwd(), 'ditto.png');
     const imageBuffer = await fs.readFile(testImagePath);
     const base64Image = imageBuffer.toString('base64');
     const generatedImageBase64 = `data:image/png;base64,${base64Image}`;
-    
+
     return NextResponse.json({
       success: true,
       generatedImageUrl: generatedImageBase64,
@@ -211,9 +218,12 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
     */
   } catch (error) {
     console.error('Error generating image:', error);
-    return NextResponse.json({ 
-      error: 'Failed to generate image',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to generate image',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

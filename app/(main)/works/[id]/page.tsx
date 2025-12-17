@@ -14,7 +14,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { WorkCommentsComponent } from '@/components/WorkCommentsComponent';
 import { ReportDialog } from '@/components/ReportDialog';
-import { ArrowLeft, Download, Trash2, Edit2, Check, X, Heart, MessageCircle, Flag, Eye } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  Trash2,
+  Edit2,
+  Check,
+  X,
+  Heart,
+  MessageCircle,
+  Flag,
+  Eye,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Work {
@@ -39,7 +50,7 @@ export default function WorkPage() {
   const t = useTranslations('works');
   const tCommon = useTranslations('common');
   const { user } = useUserStore();
-  
+
   const [work, setWork] = useState<Work | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -65,7 +76,7 @@ export default function WorkPage() {
       setLoading(true);
       const response = await fetch(`/api/works/${workId}`);
       if (!response.ok) throw new Error('Failed to fetch work');
-      
+
       const data = await response.json();
       setWork(data);
       setEditTitle(data.title || '');
@@ -106,7 +117,7 @@ export default function WorkPage() {
 
       const data = await response.json();
       setIsLiked(data.isLiked);
-      
+
       if (work) {
         setWork({
           ...work,
@@ -114,7 +125,7 @@ export default function WorkPage() {
         });
       }
 
-      toast.success(data.isLiked ? (t('liked') || 'Liked!') : (t('unliked') || 'Unliked'));
+      toast.success(data.isLiked ? t('liked') || 'Liked!' : t('unliked') || 'Unliked');
     } catch (error) {
       console.error('Error toggling like:', error);
       toast.error(t('likeError') || 'Failed to update like');
@@ -261,11 +272,7 @@ export default function WorkPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="mb-4"
-      >
+      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
         {tCommon('back') || 'Back'}
       </Button>
@@ -317,11 +324,7 @@ export default function WorkPage() {
                   {work.title || t('untitled') || 'Untitled Work'}
                 </h1>
                 {isOwner && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setIsEditing(true)}
-                  >
+                  <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -331,15 +334,15 @@ export default function WorkPage() {
 
           {/* Stats */}
           <div className="flex gap-4">
-            <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-1">
               <Eye className="h-4 w-4" />
               <span className="text-sm">{work.viewsCount || 0}</span>
             </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-1">
               <Heart className={isLiked ? 'h-4 w-4 fill-current text-red-500' : 'h-4 w-4'} />
               <span className="text-sm">{work.likesCount || 0}</span>
             </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-1">
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm">{work.commentsCount || 0}</span>
             </div>
@@ -351,11 +354,7 @@ export default function WorkPage() {
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-semibold">{t('description') || 'Description'}</p>
                 {isOwner && !isEditingDesc && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setIsEditingDesc(true)}
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditingDesc(true)}>
                     <Edit2 className="h-3 w-3" />
                   </Button>
                 )}
@@ -387,8 +386,11 @@ export default function WorkPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {work.description || (isOwner ? (t('noDescription') || 'No description yet. Click edit to add one.') : (t('noDescription') || 'No description'))}
+                <p className="text-muted-foreground text-sm">
+                  {work.description ||
+                    (isOwner
+                      ? t('noDescription') || 'No description yet. Click edit to add one.'
+                      : t('noDescription') || 'No description')}
                 </p>
               )}
             </CardContent>
@@ -398,21 +400,15 @@ export default function WorkPage() {
           <Card>
             <CardContent className="space-y-3 pt-6">
               <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('createdAt') || 'Created'}
-                </p>
-                <p className="font-medium">
-                  {new Date(work.createdAt).toLocaleDateString()}
-                </p>
+                <p className="text-muted-foreground text-sm">{t('createdAt') || 'Created'}</p>
+                <p className="font-medium">{new Date(work.createdAt).toLocaleDateString()}</p>
               </div>
               {work.templateId && (
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('template') || 'Template'}
-                  </p>
+                  <p className="text-muted-foreground text-sm">{t('template') || 'Template'}</p>
                   <Link
                     href={`/template/${work.templateId}`}
-                    className="font-medium text-primary hover:underline"
+                    className="text-primary font-medium hover:underline"
                   >
                     {t('viewTemplate') || 'View Template'}
                   </Link>
@@ -420,28 +416,22 @@ export default function WorkPage() {
               )}
               {work.promptUsed && (
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('prompt') || 'Prompt'}
-                  </p>
+                  <p className="text-muted-foreground text-sm">{t('prompt') || 'Prompt'}</p>
                   <p className="text-sm">{work.promptUsed}</p>
                 </div>
               )}
               {work.additionalPrompt && (
                 <div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {t('additionalPrompt') || 'Additional Prompt'}
                   </p>
                   <p className="text-sm">{work.additionalPrompt}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('status') || 'Status'}
-                </p>
+                <p className="text-muted-foreground text-sm">{t('status') || 'Status'}</p>
                 <Badge variant={work.isPublished ? 'default' : 'secondary'}>
-                  {work.isPublished
-                    ? t('published') || 'Published'
-                    : t('draft') || 'Draft'}
+                  {work.isPublished ? t('published') || 'Published' : t('draft') || 'Draft'}
                 </Badge>
               </div>
             </CardContent>
@@ -455,17 +445,14 @@ export default function WorkPage() {
               className="flex-1"
             >
               <Heart className={`mr-2 h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-              {isLiked ? (t('liked') || 'Liked') : (t('like') || 'Like')}
+              {isLiked ? t('liked') || 'Liked' : t('like') || 'Like'}
             </Button>
             <Button onClick={handleDownload} variant="outline" className="flex-1">
               <Download className="mr-2 h-4 w-4" />
               {tCommon('download') || 'Download'}
             </Button>
             {!isOwner && (
-              <Button
-                variant="outline"
-                onClick={() => setReportDialogOpen(true)}
-              >
+              <Button variant="outline" onClick={() => setReportDialogOpen(true)}>
                 <Flag className="mr-2 h-4 w-4" />
                 {t('report') || 'Report'}
               </Button>
@@ -477,15 +464,9 @@ export default function WorkPage() {
                   variant={work.isPublished ? 'outline' : 'default'}
                   className="flex-1"
                 >
-                  {work.isPublished
-                    ? t('unpublish') || 'Unpublish'
-                    : t('publish') || 'Publish'}
+                  {work.isPublished ? t('unpublish') || 'Unpublish' : t('publish') || 'Publish'}
                 </Button>
-                <Button
-                  onClick={handleDelete}
-                  variant="destructive"
-                  className="flex-1"
-                >
+                <Button onClick={handleDelete} variant="destructive" className="flex-1">
                   <Trash2 className="mr-2 h-4 w-4" />
                   {tCommon('delete') || 'Delete'}
                 </Button>

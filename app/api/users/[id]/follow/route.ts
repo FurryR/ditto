@@ -4,10 +4,7 @@ import { UserFollow } from '@/lib/typeorm/entities/UserFollow';
 import { getCurrentUserId } from '@/lib/typeorm/auth';
 
 // GET /api/users/[id]/follow - Check if current user follows this user
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -16,7 +13,7 @@ export async function GET(
 
     const { id: followingId } = await params;
     const followRepo = await getRepository(UserFollow);
-    
+
     const follow = await followRepo.findOne({
       where: { followerId: userId, followingId },
     });
@@ -29,10 +26,7 @@ export async function GET(
 }
 
 // POST /api/users/[id]/follow - Follow user
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -40,7 +34,7 @@ export async function POST(
     }
 
     const { id: followingId } = await params;
-    
+
     if (userId === followingId) {
       return NextResponse.json({ error: 'Cannot follow yourself' }, { status: 400 });
     }

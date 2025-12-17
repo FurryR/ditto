@@ -7,10 +7,7 @@ import { getCurrentUserId } from '@/lib/typeorm/auth';
 import { IsNull, Not } from 'typeorm';
 
 // GET /api/templates/[id]/reviews - Get all reviews for a template
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const reviewsRepo = await getRepository(Review);
@@ -30,17 +27,18 @@ export async function GET(
       const likes = await likesRepo.find({
         where: { userId: currentUserId },
       });
-      userLikes = new Set(likes.map(like => like.reviewId));
+      userLikes = new Set(likes.map((like) => like.reviewId));
     }
 
     // Format reviews with liked status
-    const formattedReviews = reviews.map(review => ({
+    const formattedReviews = reviews.map((review) => ({
       ...review,
       isLiked: userLikes.has(review.id),
-      replies: review.replies?.map((reply: any) => ({
-        ...reply,
-        isLiked: userLikes.has(reply.id),
-      })) || [],
+      replies:
+        review.replies?.map((reply: any) => ({
+          ...reply,
+          isLiked: userLikes.has(reply.id),
+        })) || [],
     }));
 
     return NextResponse.json({ reviews: formattedReviews });
@@ -51,10 +49,7 @@ export async function GET(
 }
 
 // POST /api/templates/[id]/reviews - Create a new review or reply
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -84,7 +79,7 @@ export async function POST(
     }
 
     const reviewsRepo = await getRepository(Review);
-    
+
     const review = reviewsRepo.create({
       templateId: id,
       userId,
@@ -98,22 +93,22 @@ export async function POST(
     // If this is a top-level review, update template stats
     if (!parentId) {
       const statsRepo = await getRepository(TemplateStats);
-      
+
       // Increment review count
       await statsRepo.increment({ templateId: id }, 'reviewsCount', 1);
-      
+
       // Recalculate average rating
       const allReviews = await reviewsRepo.find({
-        where: { 
-          templateId: id, 
+        where: {
+          templateId: id,
           parentId: IsNull(),
           rating: Not(IsNull()),
         },
       });
-      
+
       const totalRating = allReviews.reduce((sum, r) => sum + (r.rating || 0), 0);
       const avgRating = allReviews.length > 0 ? totalRating / allReviews.length : 0;
-      
+
       await statsRepo.update({ templateId: id }, { averageRating: avgRating });
     }
 

@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const modelPath = path.join(process.cwd(), 'noise0_scale2x.onnx');
     const modelBuffer = await fs.readFile(modelPath);
-    
+
     return new NextResponse(modelBuffer, {
       headers: {
         'Content-Type': 'application/octet-stream',
@@ -16,9 +16,12 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error loading model:', error);
-    return NextResponse.json({ 
-      error: 'Failed to load model',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to load model',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

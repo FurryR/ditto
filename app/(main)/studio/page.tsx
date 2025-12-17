@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,7 @@ function SortableImage({ image, onRemove }: { image: CharacterImage; onRemove: (
     <div
       ref={setNodeRef}
       style={style}
-      className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2 border-border"
+      className="border-border relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border-2"
     >
       <div {...attributes} {...listeners} className="h-full w-full cursor-move">
         <Image src={image.preview} alt="Character" fill className="object-cover" />
@@ -82,7 +82,7 @@ function SortableImage({ image, onRemove }: { image: CharacterImage; onRemove: (
       <Button
         variant="destructive"
         size="icon"
-        className="absolute right-1 top-1 h-6 w-6 rounded-full"
+        className="absolute top-1 right-1 h-6 w-6 rounded-full"
         onClick={handleRemove}
         onPointerDown={(e) => e.stopPropagation()}
       >
@@ -118,7 +118,7 @@ export default function StudioPage() {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
   const handleBaseImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,7 +240,7 @@ export default function StudioPage() {
   const canAddMoreImages = characterImages.length < formData.numCharacters;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="mb-8 text-3xl font-bold">{t('title')}</h1>
 
@@ -344,11 +344,11 @@ export default function StudioPage() {
               {!baseImagePreview ? (
                 <label
                   htmlFor="base-image-upload"
-                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 p-8 transition-colors hover:border-muted-foreground/50"
+                  className="border-muted-foreground/25 bg-muted/50 hover:border-muted-foreground/50 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors"
                 >
-                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <Upload className="text-muted-foreground h-8 w-8" />
                   <p className="mt-2 text-sm font-medium">{t('uploadBaseImage')}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, WEBP</p>
+                  <p className="text-muted-foreground mt-1 text-xs">PNG, JPG, WEBP</p>
                   <input
                     id="base-image-upload"
                     type="file"
@@ -426,9 +426,9 @@ export default function StudioPage() {
                     {canAddMoreImages && (
                       <label
                         htmlFor="character-image-upload"
-                        className="flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 transition-colors hover:border-muted-foreground/50"
+                        className="border-muted-foreground/25 bg-muted/50 hover:border-muted-foreground/50 flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-colors"
                       >
-                        <Plus className="h-6 w-6 text-muted-foreground" />
+                        <Plus className="text-muted-foreground h-6 w-6" />
                         <input
                           id="character-image-upload"
                           type="file"
@@ -441,8 +441,11 @@ export default function StudioPage() {
                   </div>
                 </DndContext>
 
-                <div className="text-sm text-muted-foreground">
-                  {t('uploadedCount', { count: characterImages.length, total: formData.numCharacters })}
+                <div className="text-muted-foreground text-sm">
+                  {t('uploadedCount', {
+                    count: characterImages.length,
+                    total: formData.numCharacters,
+                  })}
                   {canAddMoreImages && t('dragToReorder')}
                 </div>
 
@@ -501,7 +504,12 @@ export default function StudioPage() {
 
             {/* Submit Button */}
             <div className="flex justify-end gap-4">
-              <Button variant="outline" size="lg" disabled={isSaving} onClick={() => handleSubmit(false)}>
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={isSaving}
+                onClick={() => handleSubmit(false)}
+              >
                 {isSaving ? t('saving') : t('saveDraft')}
               </Button>
               <Button

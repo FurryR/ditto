@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
       try {
         const response = await fetch('/api/profile');
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch profile');
         }
@@ -66,7 +66,7 @@ export default function ProfilePage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-muted-foreground">{t('pleaseSignIn')}</p>
-        <Link href="/signin" className="mt-4 inline-block text-primary hover:underline">
+        <Link href="/signin" className="text-primary mt-4 inline-block hover:underline">
           {t('goToSignIn')}
         </Link>
       </div>
@@ -90,7 +90,7 @@ export default function ProfilePage() {
       if (!response.ok) throw new Error('Failed to update profile');
 
       const data = await response.json();
-      
+
       toast.success(t('savedToast'));
       setEditOpen(false);
       setProfile(data.profile);
@@ -120,7 +120,7 @@ export default function ProfilePage() {
       social.banner = data.url;
 
       toast.success(t('bannerUploaded'));
-      setProfile((prev) => prev ? { ...prev, socialLinks: social } : prev);
+      setProfile((prev) => (prev ? { ...prev, socialLinks: social } : prev));
     } catch (e) {
       toast.error(t('uploadFailed'));
     }

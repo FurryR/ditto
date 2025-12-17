@@ -68,7 +68,7 @@ export default function TemplatePage() {
   const router = useRouter();
   const t = useTranslations('template');
   const { user } = useUserStore();
-  
+
   const [template, setTemplate] = useState<any>(null);
   const [userWorks, setUserWorks] = useState<any[]>([]);
   const [relatedTemplates, setRelatedTemplates] = useState<any[]>([]);
@@ -98,7 +98,7 @@ export default function TemplatePage() {
       setLoading(true);
       const response = await fetch(`/api/templates/${templateId}`);
       if (!response.ok) throw new Error('Failed to fetch template');
-      
+
       const data = await response.json();
       setTemplate(data.template);
       setUserWorks(data.userWorks || []);
@@ -145,7 +145,6 @@ export default function TemplatePage() {
         const data = await response.json();
         setIsFollowing(data.isFollowing);
       }
-
     } catch (error) {
       console.error('Error checking follow status:', error);
     }
@@ -160,9 +159,9 @@ export default function TemplatePage() {
     try {
       const method = isLiked ? 'DELETE' : 'POST';
       const response = await fetch(`/api/templates/${templateId}/like`, { method });
-      
+
       if (!response.ok) throw new Error('Failed to toggle like');
-      
+
       setIsLiked(!isLiked);
       toast.success(isLiked ? t('unliked') : t('liked'));
       fetchTemplateData();
@@ -182,9 +181,9 @@ export default function TemplatePage() {
     try {
       const method = isFollowing ? 'DELETE' : 'POST';
       const response = await fetch(`/api/users/${template.authorId}/follow`, { method });
-      
+
       if (!response.ok) throw new Error('Failed to toggle follow');
-      
+
       setIsFollowing(!isFollowing);
       toast.success(isFollowing ? t('unfollowed') : t('followed'));
     } catch (error) {
@@ -196,15 +195,15 @@ export default function TemplatePage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="w-full h-96" />
-            <Skeleton className="w-3/4 h-8" />
-            <Skeleton className="w-full h-24" />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-24 w-full" />
           </div>
           <div className="space-y-4">
-            <Skeleton className="w-full h-32" />
-            <Skeleton className="w-full h-48" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-48 w-full" />
           </div>
         </div>
       </div>
@@ -213,21 +212,21 @@ export default function TemplatePage() {
 
   if (!template) return null;
 
-  const stats = template.stats || { 
-    viewsCount: 0, 
-    likesCount: 0, 
-    usesCount: 0, 
-    reviewsCount: 0, 
-    averageRating: 0 
+  const stats = template.stats || {
+    viewsCount: 0,
+    likesCount: 0,
+    usesCount: 0,
+    reviewsCount: 0,
+    averageRating: 0,
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Template Image */}
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+          <div className="bg-muted relative aspect-video overflow-hidden rounded-lg">
             <Image
               src={template.baseImageUrl}
               alt={template.name}
@@ -242,11 +241,7 @@ export default function TemplatePage() {
             <div className="flex items-start justify-between gap-4">
               <h1 className="text-3xl font-bold">{template.name}</h1>
               <div className="flex gap-2">
-                <Button
-                  variant={isLiked ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={handleLike}
-                >
+                <Button variant={isLiked ? 'default' : 'outline'} size="icon" onClick={handleLike}>
                   <Heart className={isLiked ? 'fill-current' : ''} />
                 </Button>
                 <Button variant="outline" size="icon" onClick={() => setShareDialogOpen(true)}>
@@ -259,24 +254,32 @@ export default function TemplatePage() {
             </div>
 
             {/* Stats */}
-            <div className="flex gap-6 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex gap-6 text-sm">
               {stats.averageRating && stats.averageRating > 0 && (
                 <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span>{stats.averageRating.toFixed(1)} ({stats.reviewsCount || 0})</span>
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span>
+                    {stats.averageRating.toFixed(1)} ({stats.reviewsCount || 0})
+                  </span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4" />
-                <span>{stats.viewsCount} {t('views')}</span>
+                <Eye className="h-4 w-4" />
+                <span>
+                  {stats.viewsCount} {t('views')}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4" />
-                <span>{stats.likesCount} {t('likes')}</span>
+                <Heart className="h-4 w-4" />
+                <span>
+                  {stats.likesCount} {t('likes')}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                <span>{stats.usesCount} {t('uses')}</span>
+                <Download className="h-4 w-4" />
+                <span>
+                  {stats.usesCount} {t('uses')}
+                </span>
               </div>
             </div>
 
@@ -285,7 +288,9 @@ export default function TemplatePage() {
               <Badge variant="secondary">{template.category}</Badge>
               <Badge variant="outline">{template.modelName}</Badge>
               {template.tags.map((tag: string) => (
-                <Badge key={tag} variant="outline">{tag}</Badge>
+                <Badge key={tag} variant="outline">
+                  {tag}
+                </Badge>
               ))}
             </div>
           </div>
@@ -293,7 +298,7 @@ export default function TemplatePage() {
           {/* Description */}
           <Card>
             <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-4">{t('description')}</h2>
+              <h2 className="mb-4 text-xl font-semibold">{t('description')}</h2>
               <p className="text-muted-foreground whitespace-pre-wrap">{template.description}</p>
             </CardContent>
           </Card>
@@ -302,10 +307,13 @@ export default function TemplatePage() {
           {template.characterImageUrls && template.characterImageUrls.length > 0 && (
             <Card>
               <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">{t('characterImages')}</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <h2 className="mb-4 text-xl font-semibold">{t('characterImages')}</h2>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                   {template.characterImageUrls.map((url: string, index: number) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                    <div
+                      key={index}
+                      className="bg-muted relative aspect-square overflow-hidden rounded-lg"
+                    >
                       <Image
                         src={url}
                         alt={`Character ${index + 1}`}
@@ -324,27 +332,27 @@ export default function TemplatePage() {
           {/* User Works - Masonry Layout */}
           <Card>
             <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-4">{t('createdWith')}</h2>
+              <h2 className="mb-4 text-xl font-semibold">{t('createdWith')}</h2>
               {userWorks.length > 0 ? (
-                <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+                <div className="columns-1 gap-4 space-y-4 sm:columns-2 md:columns-3">
                   {userWorks.map((work) => (
-                    <div 
-                      key={work.id} 
-                      className="break-inside-avoid mb-4 cursor-pointer group"
+                    <div
+                      key={work.id}
+                      className="group mb-4 cursor-pointer break-inside-avoid"
                       onClick={() => router.push(`/works/${work.id}`)}
                     >
                       <div className="space-y-2">
-                        <div className="relative w-full rounded-lg overflow-hidden bg-muted">
+                        <div className="bg-muted relative w-full overflow-hidden rounded-lg">
                           <Image
                             src={work.imageUrl}
-                            alt={work.title || "User work"}
+                            alt={work.title || 'User work'}
                             width={400}
                             height={400}
-                            className="w-full h-auto object-cover transition-transform group-hover:scale-105"
+                            className="h-auto w-full object-cover transition-transform group-hover:scale-105"
                           />
                           {/* Stats overlay */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                            <div className="flex items-center gap-3 text-white text-xs">
+                          <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                            <div className="flex items-center gap-3 text-xs text-white">
                               <span className="flex items-center gap-1">
                                 <Heart className="h-3 w-3" />
                                 {work.likesCount || 0}
@@ -363,16 +371,16 @@ export default function TemplatePage() {
                         {work.user && (
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
-                              <Avatar className="w-6 h-6">
+                              <Avatar className="h-6 w-6">
                                 <AvatarImage src={work.user.avatar} />
                                 <AvatarFallback>{work.user.githubUsername?.[0]}</AvatarFallback>
                               </Avatar>
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-muted-foreground text-sm">
                                 @{work.user.githubUsername}
                               </span>
                             </div>
                             {work.title && (
-                              <span className="text-xs text-muted-foreground truncate">
+                              <span className="text-muted-foreground truncate text-xs">
                                 {work.title}
                               </span>
                             )}
@@ -383,9 +391,7 @@ export default function TemplatePage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 text-center text-muted-foreground">
-                  {t('noWorks')}
-                </div>
+                <div className="text-muted-foreground py-12 text-center">{t('noWorks')}</div>
               )}
             </CardContent>
           </Card>
@@ -406,12 +412,12 @@ export default function TemplatePage() {
 
           {/* Author Card */}
           <Card
-            className="cursor-pointer hover:shadow-md transition-shadow"
+            className="cursor-pointer transition-shadow hover:shadow-md"
             onClick={() => router.push(`/profile/${template.author?.githubUsername}`)}
           >
             <CardContent className="pt-6">
-              <div className="flex items-start gap-4 mb-4">
-                <Avatar className="w-12 h-12">
+              <div className="mb-4 flex items-start gap-4">
+                <Avatar className="h-12 w-12">
                   <AvatarImage src={template.author?.avatarUrl} />
                   <AvatarFallback>{template.author?.githubUsername?.[0]}</AvatarFallback>
                 </Avatar>
@@ -420,18 +426,24 @@ export default function TemplatePage() {
                     {template.author?.displayName || template.author?.githubUsername}
                   </h3>
                   {template.author?.displayName && (
-                    <p className="text-sm text-muted-foreground">@{template.author?.githubUsername}</p>
+                    <p className="text-muted-foreground text-sm">
+                      @{template.author?.githubUsername}
+                    </p>
                   )}
-                  <div className="flex gap-3 mt-2 text-sm text-muted-foreground">
-                    <span>{template.author?.followingCount || 0} {t('following')}</span>
-                    <span>{template.author?.followersCount || 0} {t('followers')}</span>
+                  <div className="text-muted-foreground mt-2 flex gap-3 text-sm">
+                    <span>
+                      {template.author?.followingCount || 0} {t('following')}
+                    </span>
+                    <span>
+                      {template.author?.followersCount || 0} {t('followers')}
+                    </span>
                   </div>
                 </div>
                 {user && user.id !== template.authorId && (
                   <Button
                     variant={isFollowing ? 'secondary' : 'default'}
                     size="icon"
-                    className="rounded-full h-8 w-8 shrink-0"
+                    className="h-8 w-8 shrink-0 rounded-full"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleFollow();
@@ -446,7 +458,7 @@ export default function TemplatePage() {
 
           {/* Template Details */}
           <Card>
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <h3 className="font-semibold">{t('details')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -480,7 +492,7 @@ export default function TemplatePage() {
           {relatedTemplates.length > 0 && (
             <Card>
               <CardContent className="pt-6">
-                <h3 className="font-semibold mb-4">{t('relatedTemplates')}</h3>
+                <h3 className="mb-4 font-semibold">{t('relatedTemplates')}</h3>
                 <div className="space-y-4">
                   {relatedTemplates.slice(0, 3).map((related) => (
                     <div
@@ -488,18 +500,16 @@ export default function TemplatePage() {
                       className="group cursor-pointer"
                       onClick={() => router.push(`/template/${related.id}`)}
                     >
-                      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted mb-2">
+                      <div className="bg-muted relative mb-2 aspect-video overflow-hidden rounded-lg">
                         <Image
                           src={related.base_image_url}
                           alt={related.name}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform"
+                          className="object-cover transition-transform group-hover:scale-105"
                         />
                       </div>
-                      <h4 className="font-medium text-sm line-clamp-1">{related.name}</h4>
-                      <p className="text-xs text-muted-foreground">
-                        @{related.profiles.username}
-                      </p>
+                      <h4 className="line-clamp-1 text-sm font-medium">{related.name}</h4>
+                      <p className="text-muted-foreground text-xs">@{related.profiles.username}</p>
                     </div>
                   ))}
                 </div>
@@ -510,11 +520,7 @@ export default function TemplatePage() {
       </div>
 
       {/* Dialogs */}
-      <UseTemplateDialog
-        open={useDialogOpen}
-        onOpenChange={setUseDialogOpen}
-        template={template}
-      />
+      <UseTemplateDialog open={useDialogOpen} onOpenChange={setUseDialogOpen} template={template} />
       <ShareDialog
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}

@@ -9,7 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Settings, Globe, Github, Twitter, Mail, Send, MessageCircle, Upload, Camera, Heart, Eye } from 'lucide-react';
+import {
+  Settings,
+  Globe,
+  Github,
+  Twitter,
+  Mail,
+  Send,
+  MessageCircle,
+  Upload,
+  Camera,
+  Heart,
+  Eye,
+} from 'lucide-react';
 
 export type ProfileRow = {
   id: string;
@@ -40,7 +52,16 @@ type WorkPreview = {
   viewsCount?: number;
 };
 
-const CONTACT_ORDER = ['website', 'github', 'twitter', 'email', 'telegram', 'discord', 'bilibili', 'weibo'] as const;
+const CONTACT_ORDER = [
+  'website',
+  'github',
+  'twitter',
+  'email',
+  'telegram',
+  'discord',
+  'bilibili',
+  'weibo',
+] as const;
 
 export function ProfileView({
   profile,
@@ -110,10 +131,7 @@ export function ProfileView({
     <div className="mx-auto max-w-6xl space-y-6">
       <Card className="overflow-hidden p-0">
         <div
-          className={
-            'relative h-40 w-full bg-muted group ' +
-            (editable ? 'cursor-pointer' : '')
-          }
+          className={'bg-muted group relative h-40 w-full ' + (editable ? 'cursor-pointer' : '')}
           onClick={editable ? handleBannerClick : undefined}
         >
           {bannerUrl ? (
@@ -121,7 +139,7 @@ export function ProfileView({
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900" />
           )}
-          
+
           {editable && (
             <>
               <input
@@ -131,8 +149,8 @@ export function ProfileView({
                 className="hidden"
                 onChange={handleBannerChange}
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center pointer-events-none">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+                <div className="opacity-0 transition-opacity group-hover:opacity-100">
                   {uploading ? (
                     <div className="text-white">{t('uploading')}</div>
                   ) : (
@@ -147,10 +165,7 @@ export function ProfileView({
           )}
 
           {showSettings && (
-            <div 
-              className="absolute right-4 top-4 z-10" 
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
               <Button asChild variant="outline" size="icon" aria-label={t('settings')}>
                 <Link href="/settings">
                   <Settings className="h-4 w-4" />
@@ -162,7 +177,7 @@ export function ProfileView({
 
         <div className="px-6 pb-4">
           <div className="flex items-start gap-6">
-            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-muted border-4 border-white -mt-10">
+            <div className="bg-muted relative -mt-10 h-20 w-20 shrink-0 overflow-hidden rounded-full border-4 border-white">
               <Image
                 src={profile.avatarUrl || '/default-avatar.jpg'}
                 alt={displayName}
@@ -170,7 +185,7 @@ export function ProfileView({
                 className="object-cover"
               />
             </div>
-            
+
             <div className="flex-1 space-y-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -187,22 +202,42 @@ export function ProfileView({
                         }
                       }}
                       autoFocus
-                      className="text-2xl font-bold h-auto py-1 px-2"
+                      className="h-auto px-2 py-1 text-2xl font-bold"
                     />
                   ) : (
                     <div
-                      className={(editable ? 'cursor-pointer hover:text-muted-foreground transition-colors ' : '') + 'text-2xl font-bold'}
+                      className={
+                        (editable
+                          ? 'hover:text-muted-foreground cursor-pointer transition-colors '
+                          : '') + 'text-2xl font-bold'
+                      }
                       onClick={() => editable && setEditingName(true)}
                     >
                       {displayName}
                     </div>
                   )}
                   {profile.githubUsername && (
-                    <div className="text-sm text-muted-foreground">@{profile.githubUsername}</div>
+                    <div className="text-muted-foreground text-sm">@{profile.githubUsername}</div>
                   )}
-                  <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                    <span>{profile.followingCount || 0} {t('following')}</span>
-                    <span>{profile.followersCount || 0} {t('followers')}</span>
+                  <div className="mt-2 flex gap-4 text-sm">
+                    <Link
+                      href={`/profile/${profile.githubUsername}/follows?tab=following`}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span className="text-foreground font-semibold">
+                        {profile.followingCount || 0}
+                      </span>{' '}
+                      {t('following')}
+                    </Link>
+                    <Link
+                      href={`/profile/${profile.githubUsername}/follows?tab=followers`}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span className="text-foreground font-semibold">
+                        {profile.followersCount || 0}
+                      </span>{' '}
+                      {t('followers')}
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -219,14 +254,14 @@ export function ProfileView({
                     }
                   }}
                   autoFocus
-                  className="text-sm text-muted-foreground min-h-20"
+                  className="text-muted-foreground min-h-20 text-sm"
                   placeholder={t('bioEmpty')}
                 />
               ) : (
                 <div
                   className={
-                    'text-sm text-muted-foreground whitespace-pre-wrap break-words ' +
-                    (editable ? 'cursor-pointer hover:opacity-70 transition-opacity' : '')
+                    'text-muted-foreground text-sm break-words whitespace-pre-wrap ' +
+                    (editable ? 'cursor-pointer transition-opacity hover:opacity-70' : '')
                   }
                   onClick={() => editable && setEditingBio(true)}
                 >
@@ -240,22 +275,25 @@ export function ProfileView({
                 const hasAnyLinks = githubUsername || otherLinks.length > 0;
 
                 if (!hasAnyLinks) {
-                  return (
-                    <div className="text-sm text-muted-foreground">
-                      {t('contactsEmpty')}
-                    </div>
-                  );
+                  return <div className="text-muted-foreground text-sm">{t('contactsEmpty')}</div>;
                 }
 
                 const getIcon = (platform: string) => {
-                  switch(platform) {
-                    case 'website': return <Globe className="h-5 w-5" />;
-                    case 'github': return <Github className="h-5 w-5" />;
-                    case 'twitter': return <Twitter className="h-5 w-5" />;
-                    case 'email': return <Mail className="h-5 w-5" />;
-                    case 'telegram': return <Send className="h-5 w-5" />;
-                    case 'discord': return <MessageCircle className="h-5 w-5" />;
-                    default: return <Globe className="h-5 w-5" />;
+                  switch (platform) {
+                    case 'website':
+                      return <Globe className="h-5 w-5" />;
+                    case 'github':
+                      return <Github className="h-5 w-5" />;
+                    case 'twitter':
+                      return <Twitter className="h-5 w-5" />;
+                    case 'email':
+                      return <Mail className="h-5 w-5" />;
+                    case 'telegram':
+                      return <Send className="h-5 w-5" />;
+                    case 'discord':
+                      return <MessageCircle className="h-5 w-5" />;
+                    default:
+                      return <Globe className="h-5 w-5" />;
                   }
                 };
 
@@ -269,7 +307,7 @@ export function ProfileView({
                         rel="noopener noreferrer"
                       >
                         <button
-                          className="p-2 rounded-full hover:bg-muted transition-colors"
+                          className="hover:bg-muted rounded-full p-2 transition-colors"
                           title="GitHub"
                         >
                           <Github className="h-5 w-5" />
@@ -283,7 +321,7 @@ export function ProfileView({
                       const isUrl = /^https?:\/\//i.test(value);
                       const iconButton = (
                         <button
-                          className="p-2 rounded-full hover:bg-muted transition-colors"
+                          className="hover:bg-muted rounded-full p-2 transition-colors"
                           title={t(`social.${k}`)}
                         >
                           {getIcon(k)}
@@ -294,9 +332,7 @@ export function ProfileView({
                           {iconButton}
                         </a>
                       ) : (
-                        <div key={k}>
-                          {iconButton}
-                        </div>
+                        <div key={k}>{iconButton}</div>
                       );
                     })}
                   </div>
@@ -324,19 +360,20 @@ export function ProfileView({
           </div>
 
           {templates.length === 0 ? (
-            <div className="py-16 text-center text-muted-foreground">{t('templatesEmpty')}</div>
+            <div className="text-muted-foreground py-16 text-center">{t('templatesEmpty')}</div>
           ) : (
             <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
               {templates.map((tpl) => (
                 <div key={tpl.id} className="mb-4 break-inside-avoid">
                   <Link href={`/template/${tpl.id}`}>
                     <Card className="group overflow-hidden">
-                      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                      <div className="bg-muted relative w-full overflow-hidden">
                         <Image
                           src={tpl.coverImageUrl || tpl.baseImageUrl}
                           alt={tpl.name}
-                          fill
-                          className="object-cover transition-transform group-hover:scale-105"
+                          width={400}
+                          height={300}
+                          className="h-auto w-full object-cover transition-transform group-hover:scale-105"
                         />
                       </div>
                       <div className="p-3">
@@ -366,23 +403,24 @@ export function ProfileView({
           </div>
 
           {works.length === 0 ? (
-            <div className="py-16 text-center text-muted-foreground">{t('worksEmpty')}</div>
+            <div className="text-muted-foreground py-16 text-center">{t('worksEmpty')}</div>
           ) : (
             <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
               {works.map((work) => (
                 <div key={work.id} className="mb-4 break-inside-avoid">
                   <Link href={`/works/${work.id}`}>
-                    <Card className="group overflow-hidden cursor-pointer">
-                      <div className="relative aspect-square overflow-hidden bg-muted">
+                    <Card className="group cursor-pointer overflow-hidden">
+                      <div className="bg-muted relative w-full overflow-hidden">
                         <Image
                           src={work.imageUrl}
                           alt={work.title || tCommon('work')}
-                          fill
-                          className="object-cover transition-transform group-hover:scale-105"
+                          width={400}
+                          height={400}
+                          className="h-auto w-full object-cover transition-transform group-hover:scale-105"
                         />
                         {/* Stats overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                          <div className="flex items-center gap-3 text-white text-xs">
+                        <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                          <div className="flex items-center gap-3 text-xs text-white">
                             <span className="flex items-center gap-1">
                               <Heart className="h-3 w-3" />
                               {work.likesCount || 0}

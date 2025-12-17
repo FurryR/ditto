@@ -1,5 +1,12 @@
 export type ImageCategory = 'meme' | 'anime' | 'comic' | 'album-art';
-export type LicenseType = 'CC-0' | 'CC-BY-4.0' | 'CC-BY-SA-4.0' | 'CC-BY-NC-4.0' | 'CC-BY-NC-SA-4.0' | 'CC-BY-ND-4.0' | 'custom';
+export type LicenseType =
+  | 'CC-0'
+  | 'CC-BY-4.0'
+  | 'CC-BY-SA-4.0'
+  | 'CC-BY-NC-4.0'
+  | 'CC-BY-NC-SA-4.0'
+  | 'CC-BY-ND-4.0'
+  | 'custom';
 export type LicenseRestriction = 'share-alike' | 'no-commercial' | 'no-derivatives' | 'attribution';
 export type ReactionType = 'like' | 'love' | 'laugh' | 'wow' | 'sad' | 'angry';
 export type ReviewReactionType = 'helpful' | 'funny' | 'unhelpful';

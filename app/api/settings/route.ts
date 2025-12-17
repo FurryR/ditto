@@ -6,14 +6,14 @@ import { getCurrentUserId } from '@/lib/typeorm/auth';
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const profileRepo = await getRepository(Profile);
     const profile = await profileRepo.findOne({ where: { id: userId } });
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
@@ -31,7 +31,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const userId = await getCurrentUserId();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -169,10 +169,10 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
       const response = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          targetType: 'review', 
-          targetId: reviewId, 
-          reason 
+        body: JSON.stringify({
+          targetType: 'review',
+          targetId: reviewId,
+          reason,
         }),
       });
 
@@ -186,26 +186,28 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
   };
 
   const ReviewItem = ({ review, isReply = false }: { review: Review; isReply?: boolean }) => (
-    <div className={`${isReply ? 'ml-12 mt-4' : ''}`}>
+    <div className={`${isReply ? 'mt-4 ml-12' : ''}`}>
       <div className="flex gap-3">
-        <Avatar className="w-10 h-10">
+        <Avatar className="h-10 w-10">
           <AvatarImage src={review.user?.avatarUrl} />
           <AvatarFallback>{review.user?.githubUsername?.[0] || 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="font-semibold">{review.user?.displayName || review.user?.githubUsername}</span>
+            <span className="font-semibold">
+              {review.user?.displayName || review.user?.githubUsername}
+            </span>
             {review.rating && (
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-4 h-4 ${i < review.rating! ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                    className={`h-4 w-4 ${i < review.rating! ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
                   />
                 ))}
               </div>
             )}
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {new Date(review.createdAt).toLocaleDateString()}
             </span>
           </div>
@@ -215,20 +217,20 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-auto p-0 gap-1"
+                className="h-auto gap-1 p-0"
                 onClick={() => handleToggleLike(review.id, review.isLiked)}
               >
-                <Heart className={`w-4 h-4 ${review.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                <Heart className={`h-4 w-4 ${review.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                 <span>{review.likesCount}</span>
               </Button>
               {!isReply && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-0 gap-1"
+                  className="h-auto gap-1 p-0"
                   onClick={() => setReplyingTo(replyingTo === review.id ? null : review.id)}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="h-4 w-4" />
                   <span>{t('reply')}</span>
                 </Button>
               )}
@@ -237,7 +239,7 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-auto p-1">
-                    <MoreHorizontal className="w-4 h-4" />
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -246,13 +248,13 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
                       className="text-destructive focus:text-destructive"
                       onClick={() => handleDeleteReview(review.id)}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Trash2 className="mr-2 h-4 w-4" />
                       {t('delete')}
                     </DropdownMenuItem>
                   )}
                   {user.id !== review.userId && (
                     <DropdownMenuItem onClick={() => handleReportReview(review.id)}>
-                      <Flag className="w-4 h-4 mr-2" />
+                      <Flag className="mr-2 h-4 w-4" />
                       {t('report')}
                     </DropdownMenuItem>
                   )}
@@ -305,7 +307,7 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-4">{t('writeReview')}</h2>
+          <h2 className="mb-4 text-xl font-semibold">{t('writeReview')}</h2>
           {user ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -319,8 +321,10 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
                       className="focus:outline-none"
                     >
                       <Star
-                        className={`w-6 h-6 cursor-pointer transition-colors ${
-                          i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-400'
+                        className={`h-6 w-6 cursor-pointer transition-colors ${
+                          i < rating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300 hover:text-yellow-400'
                         }`}
                       />
                     </button>
@@ -345,11 +349,11 @@ export function ReviewsComponent({ templateId, reviews, onReviewsUpdate }: Revie
 
       <Card>
         <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="mb-4 text-xl font-semibold">
             {t('reviews')} ({reviews.length})
           </h2>
           {reviews.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">{t('noReviews')}</p>
+            <p className="text-muted-foreground py-8 text-center">{t('noReviews')}</p>
           ) : (
             <div className="space-y-6">
               {reviews.map((review) => (

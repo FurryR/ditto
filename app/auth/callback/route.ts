@@ -13,25 +13,24 @@ export async function GET(request: Request) {
     // Sync GitHub username from auth provider metadata
     if (sessionData?.user) {
       const user = sessionData.user;
-      const githubUsername = user.user_metadata?.user_name || user.user_metadata?.preferred_username;
+      const githubUsername =
+        user.user_metadata?.user_name || user.user_metadata?.preferred_username;
       const avatarUrl = user.user_metadata?.avatar_url;
 
       if (githubUsername) {
         // Update or insert profile with latest GitHub data
-        const { error: upsertError } = await supabase
-          .from('profiles')
-          .upsert(
-            {
-              id: user.id,
-              github_username: githubUsername,
-              avatar_url: avatarUrl,
-              updated_at: new Date().toISOString(),
-            },
-            {
-              onConflict: 'id',
-              ignoreDuplicates: false,
-            }
-          );
+        const { error: upsertError } = await supabase.from('profiles').upsert(
+          {
+            id: user.id,
+            github_username: githubUsername,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'id',
+            ignoreDuplicates: false,
+          }
+        );
 
         if (upsertError) {
           console.error('Failed to upsert profile:', upsertError);

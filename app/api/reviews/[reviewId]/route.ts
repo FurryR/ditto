@@ -55,16 +55,18 @@ export async function DELETE(
       if (stats) {
         // Count how many reviews will be deleted (parent + replies)
         const deletedCount = 1 + (review.replies?.length || 0);
-        
+
         // Update stats
         await statsRepo.update(
           { templateId: review.templateId },
           {
             reviewsCount: Math.max(0, (stats.reviewsCount || 0) - deletedCount),
             // Recalculate average rating by removing this review's rating
-            averageRating: stats.reviewsCount > 1 
-              ? ((stats.averageRating || 0) * stats.reviewsCount - (review.rating || 0)) / (stats.reviewsCount - 1)
-              : 0,
+            averageRating:
+              stats.reviewsCount > 1
+                ? ((stats.averageRating || 0) * stats.reviewsCount - (review.rating || 0)) /
+                  (stats.reviewsCount - 1)
+                : 0,
           }
         );
       }

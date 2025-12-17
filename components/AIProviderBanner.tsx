@@ -35,7 +35,7 @@ export function AIProviderBanner() {
         const response = await fetch('/api/settings');
         if (response.ok) {
           const data = await response.json();
-          const hasToken = !!(data.apiSettings?.openrouter_key);
+          const hasToken = !!data.apiSettings?.openrouter_key;
           setIsConnected(hasToken);
           setIsVisible(!hasToken);
         }
@@ -63,19 +63,17 @@ export function AIProviderBanner() {
   }
 
   return (
-    <div className="bg-yellow-50 border-b border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800">
+    <div className="border-b border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-3 gap-4">
+        <div className="flex items-center justify-between gap-4 py-3">
           <button
             onClick={handleClick}
-            className="flex items-start gap-3 flex-1 text-left hover:opacity-80 transition-opacity"
+            className="flex flex-1 items-start gap-3 text-left transition-opacity hover:opacity-80"
           >
-            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mt-0.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-yellow-900 dark:text-yellow-100">
-                {t('title')}
-              </p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-0.5">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600 dark:text-yellow-500" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-yellow-900 dark:text-yellow-100">{t('title')}</p>
+              <p className="mt-0.5 text-sm text-yellow-700 dark:text-yellow-300">
                 {t('description')}
               </p>
             </div>
@@ -84,7 +82,7 @@ export function AIProviderBanner() {
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="shrink-0 h-8 w-8 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-100 dark:text-yellow-400 dark:hover:text-yellow-200 dark:hover:bg-yellow-900"
+            className="h-8 w-8 shrink-0 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-900 dark:text-yellow-400 dark:hover:bg-yellow-900 dark:hover:text-yellow-200"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">{t('close')}</span>

@@ -99,6 +99,9 @@ export function Navigation() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile">{t('profile')}</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings">{t('settings')}</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <form action="/api/auth/signout" method="POST" className="w-full">
                       <button type="submit" className="w-full text-left">
@@ -165,6 +168,9 @@ export function Navigation() {
               <div className="mt-3 space-y-1 px-2">
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/profile">{t('profile')}</Link>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/settings">{t('settings')}</Link>
                 </Button>
                 <form action="/api/auth/signout" method="POST">
                   <Button variant="ghost" type="submit" className="w-full">

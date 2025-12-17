@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "@/i18n/routing";
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from '@/i18n/routing';
 import { toast } from 'sonner';
 import { Github, Twitter, Globe } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export default function UserProfilePage({ params }: { params: { username: string
       try {
         const response = await fetch(`/api/profile/${params.username}`);
         if (!response.ok) throw new Error('User not found');
-        
+
         const data = await response.json();
         setUser(data.profile);
         setTemplates(data.templates || []);
@@ -57,7 +57,7 @@ export default function UserProfilePage({ params }: { params: { username: string
     <div className="container mx-auto px-4 py-8">
       <Card className="mb-8 p-8">
         <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
-          <div className="relative mb-4 h-32 w-32 shrink-0 overflow-hidden rounded-full sm:mb-0 sm:mr-6">
+          <div className="relative mb-4 h-32 w-32 shrink-0 overflow-hidden rounded-full sm:mr-6 sm:mb-0">
             <Image
               src={user.avatar || '/placeholder-avatar.png'}
               alt={user.name || params.username}
@@ -66,12 +66,8 @@ export default function UserProfilePage({ params }: { params: { username: string
             />
           </div>
           <div className="flex-1">
-            <h1 className="mb-2 text-3xl font-bold">
-              {user.name || params.username}
-            </h1>
-            {user.bio && (
-              <p className="mb-4 text-muted-foreground">{user.bio}</p>
-            )}
+            <h1 className="mb-2 text-3xl font-bold">{user.name || params.username}</h1>
+            {user.bio && <p className="text-muted-foreground mb-4">{user.bio}</p>}
             {user.socialLinks && (
               <div className="flex gap-2">
                 {user.socialLinks.github && (
@@ -103,13 +99,13 @@ export default function UserProfilePage({ params }: { params: { username: string
 
       <h2 className="mb-4 text-2xl font-bold">{t('templates')}</h2>
       {templates.length === 0 ? (
-        <p className="py-8 text-center text-muted-foreground">{t('noPublicTemplates')}</p>
+        <p className="text-muted-foreground py-8 text-center">{t('noPublicTemplates')}</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {templates.map((template) => (
             <Link key={template.id} href={`/template/${template.id}`}>
               <Card className="group overflow-hidden transition-all hover:shadow-lg">
-                <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                <div className="bg-muted relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={template.coverImageUrl || template.baseImageUrl}
                     alt={template.name}

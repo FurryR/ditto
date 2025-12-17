@@ -43,7 +43,7 @@ export function ShareDialog({ open, onOpenChange, title, url }: ShareDialogProps
     window.open(
       `https://twitter.com/intent/tweet?text=${text}&url=${shareUrl}`,
       '_blank',
-      'width=550,height=420',
+      'width=550,height=420'
     );
   };
 
@@ -53,13 +53,13 @@ export function ShareDialog({ open, onOpenChange, title, url }: ShareDialogProps
     window.open(
       `https://reddit.com/submit?title=${shareTitle}&url=${shareUrl}`,
       '_blank',
-      'width=800,height=600',
+      'width=800,height=600'
     );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl w-[95vw] sm:w-auto">
+      <DialogContent className="w-[95vw] max-w-3xl sm:w-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />

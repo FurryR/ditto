@@ -108,7 +108,7 @@ export function ReportDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-destructive" />
+            <AlertCircle className="text-destructive h-5 w-5" />
             {t('title')}
           </DialogTitle>
           <DialogDescription>

@@ -14,9 +14,11 @@ export async function GET(request: Request) {
     }
 
     const userId = await getCurrentUserId();
-    
+
     if (!userId) {
-      return NextResponse.redirect(new URL('/signin?redirect=' + encodeURIComponent(redirect), request.url));
+      return NextResponse.redirect(
+        new URL('/signin?redirect=' + encodeURIComponent(redirect), request.url)
+      );
     }
 
     // Get code_verifier from cookies
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
     // Save the key to database
     const profileRepo = await getRepository(Profile);
     const profile = await profileRepo.findOne({ where: { id: userId } });
-    
+
     if (!profile) {
       return NextResponse.redirect(new URL('/settings?error=profile_not_found', request.url));
     }
@@ -69,7 +71,7 @@ export async function GET(request: Request) {
 
     // Clear the code_verifier cookie and redirect
     const response = NextResponse.redirect(new URL(redirect + '?success=true', request.url));
-    response.cookies.set('openrouter_code_verifier', '', { 
+    response.cookies.set('openrouter_code_verifier', '', {
       maxAge: 0,
       path: '/',
     });

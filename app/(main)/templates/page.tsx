@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "@/i18n/routing";
-import { Search, Star } from "lucide-react";
+import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from '@/i18n/routing';
+import { Search, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Template } from '@/types';
 
@@ -43,7 +43,7 @@ export default function TemplatesPage() {
         const response = await fetch('/api/templates');
         if (!response.ok) throw new Error('Failed to fetch templates');
         const data = await response.json();
-        
+
         const mapped: ExtendedTemplate[] = data.map((tpl: any) => ({
           ...tpl,
           viewsCount: tpl.stats?.viewsCount ?? 0,
@@ -65,7 +65,10 @@ export default function TemplatesPage() {
 
   const filteredTemplates = templates.filter((template) => {
     const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
-    const matchesSearch = !searchQuery || template.name.toLowerCase().includes(searchQuery.toLowerCase()) || template.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !searchQuery ||
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -75,7 +78,7 @@ export default function TemplatesPage() {
         <h1 className="mb-4 text-4xl font-bold">{t('title')}</h1>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
@@ -112,25 +115,24 @@ export default function TemplatesPage() {
           ))}
         </div>
       ) : filteredTemplates.length === 0 ? (
-        <div className="py-16 text-center text-muted-foreground">
-          {t('noResults')}
-        </div>
+        <div className="text-muted-foreground py-16 text-center">{t('noResults')}</div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
           {filteredTemplates.map((template) => (
             <Link key={template.id} href={`/template/${template.id}`}>
-              <Card className="group overflow-hidden transition-all hover:shadow-lg">
-                <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+              <Card className="group mb-6 break-inside-avoid overflow-hidden transition-all hover:shadow-lg">
+                <div className="bg-muted relative w-full overflow-hidden">
                   <Image
                     src={template.coverImageUrl || template.baseImageUrl}
                     alt={template.name}
-                    fill
-                    className="object-cover transition-transform group-hover:scale-105"
+                    width={400}
+                    height={300}
+                    className="h-auto w-full object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
                 <div className="p-4">
                   <h3 className="mb-2 line-clamp-1 font-semibold">{template.name}</h3>
-                  <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">
                     {template.description}
                   </p>
                   <div className="flex flex-wrap gap-1">
@@ -140,10 +142,10 @@ export default function TemplatesPage() {
                       </Badge>
                     ))}
                   </div>
-                  <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="text-muted-foreground mt-3 flex items-center gap-4 text-xs">
                     {template.averageRating && template.averageRating > 0 ? (
                       <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <span>{template.averageRating.toFixed(1)}</span>
                         <span>({template.reviewsCount || 0})</span>
                       </div>
