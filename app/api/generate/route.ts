@@ -151,24 +151,23 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
 
     // DEVELOPMENT MODE: Return test image instead of calling OpenRouter API
     // Comment out the following block and uncomment the OpenRouter API call below for production
-    const fs = await import('fs').then((m) => m.promises);
-    const path = await import('path');
-    const testImagePath = path.join(process.cwd(), 'ditto.png');
-    const imageBuffer = await fs.readFile(testImagePath);
-    const base64Image = imageBuffer.toString('base64');
-    const generatedImageBase64 = `data:image/png;base64,${base64Image}`;
+    // const fs = await import('fs').then((m) => m.promises);
+    // const path = await import('path');
+    // const testImagePath = path.join(process.cwd(), 'ditto.png');
+    // const imageBuffer = await fs.readFile(testImagePath);
+    // const base64Image = imageBuffer.toString('base64');
+    // const generatedImageBase64 = `data:image/png;base64,${base64Image}`;
 
-    return NextResponse.json({
-      success: true,
-      generatedImageUrl: generatedImageBase64,
-    });
+    // return NextResponse.json({
+    //   success: true,
+    //   generatedImageUrl: generatedImageBase64,
+    // });
 
-    /* PRODUCTION CODE - Uncomment for actual OpenRouter API calls
     // Call OpenRouter API
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openRouterKey}`,
+        Authorization: `Bearer ${openRouterKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'https://ditto.app',
         'X-Title': 'Ditto',
@@ -191,20 +190,30 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenRouter API error:', errorText);
-      return NextResponse.json({ 
-        error: 'Image generation failed', 
-        details: errorText 
-      }, { status: response.status });
+      return NextResponse.json(
+        {
+          error: 'Image generation failed',
+          details: errorText,
+        },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();
 
     // Extract generated image
-    if (!data.choices || !data.choices[0]?.message?.images || data.choices[0].message.images.length === 0) {
-      return NextResponse.json({ 
-        error: 'No image generated',
-        details: 'The AI did not generate an image'
-      }, { status: 500 });
+    if (
+      !data.choices ||
+      !data.choices[0]?.message?.images ||
+      data.choices[0].message.images.length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error: 'No image generated',
+          details: 'The AI did not generate an image',
+        },
+        { status: 500 }
+      );
     }
 
     const generatedImageBase64 = data.choices[0].message.images[0].image_url.url;
@@ -215,7 +224,6 @@ ${template.promptTemplate}${additionalPrompt ? `\n\n${additionalPrompt}` : ''}`;
       success: true,
       generatedImageUrl: generatedImageBase64,
     });
-    */
   } catch (error) {
     console.error('Error generating image:', error);
     return NextResponse.json(

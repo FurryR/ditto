@@ -121,13 +121,13 @@ export default function TemplatesPage() {
           {filteredTemplates.map((template) => (
             <Link key={template.id} href={`/template/${template.id}`}>
               <Card className="group mb-6 break-inside-avoid overflow-hidden transition-all hover:shadow-lg">
-                <div className="bg-muted relative w-full overflow-hidden">
+                <div className="bg-muted relative aspect-[4/3] w-full overflow-hidden">
                   <Image
                     src={template.coverImageUrl || template.baseImageUrl}
                     alt={template.name}
-                    width={400}
-                    height={300}
-                    className="h-auto w-full object-cover transition-transform group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                    className="object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
                 <div className="p-4">

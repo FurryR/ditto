@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -96,6 +97,11 @@ export default function StudioPage() {
   const t = useTranslations('studio');
   const { user } = useUserStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const templateId = searchParams.get('templateId');
+  const isEditMode = !!templateId;
+
+  const [loading, setLoading] = useState(isEditMode);
   const [baseImage, setBaseImage] = useState<File | null>(null);
   const [baseImagePreview, setBaseImagePreview] = useState<string | null>(null);
   const [characterImages, setCharacterImages] = useState<CharacterImage[]>([]);
@@ -120,6 +126,59 @@ export default function StudioPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Load existing template data in edit mode
+  useEffect(() => {
+    if (!isEditMode || !templateId) return;
+
+    const loadTemplate = async () => {
+      try {
+        // Request with edit=true to get full template including promptTemplate
+        const res = await fetch(`/api/templates/${templateId}?edit=true`);
+
+        if (res.status === 401) {
+          toast.error(t('pleaseSignIn'));
+          router.push('/signin');
+          return;
+        }
+
+        if (res.status === 403) {
+          toast.error(t('noPermission'));
+          router.push('/templates');
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error('Failed to load template');
+        }
+
+        const data = await res.json();
+        const template = data.template;
+
+        setFormData({
+          name: template.name || '',
+          description: template.description || '',
+          promptTemplate: template.promptTemplate || '',
+          category: template.category || 'anime',
+          tags: template.tags?.join(', ') || '',
+          modelName: template.modelName || 'google/gemini-2.5-flash-image',
+          numCharacters: template.numCharacters || 1,
+          licenseType: template.licenseType || 'CC-BY-NC-SA-4.0',
+          additionalPrompt: '',
+        });
+
+        setBaseImagePreview(template.baseImageUrl || null);
+      } catch (err) {
+        toast.error(t('loadTemplateFailed'));
+        console.error('Error loading template:', err);
+        router.push('/templates');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTemplate();
+  }, [isEditMode, templateId, t, router]);
 
   const handleBaseImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -184,7 +243,7 @@ export default function StudioPage() {
       toast.error(t('pleaseSignIn'));
       return;
     }
-    if (!baseImage) {
+    if (!isEditMode && !baseImage) {
       toast.error(t('pleaseUploadBaseImage'));
       return;
     }
@@ -195,29 +254,40 @@ export default function StudioPage() {
 
     setIsSaving(true);
     try {
-      const baseUrl = await uploadToStorage(baseImage, 'base');
+      let baseUrl = baseImagePreview;
+
+      // Upload new base image if changed
+      if (baseImage) {
+        baseUrl = await uploadToStorage(baseImage, 'template-base');
+      }
+
       const tags = formData.tags
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
 
-      const res = await fetch('/api/templates', {
-        method: 'POST',
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        baseImageUrl: baseUrl,
+        coverImageUrl: baseUrl,
+        promptTemplate: formData.promptTemplate,
+        category: formData.category,
+        tags,
+        modelName: formData.modelName,
+        numCharacters: formData.numCharacters,
+        licenseType: formData.licenseType,
+        licenseRestrictions: [],
+        isPublished,
+      };
+
+      const url = isEditMode ? `/api/templates/${templateId}` : '/api/templates';
+      const method = isEditMode ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          baseImageUrl: baseUrl,
-          coverImageUrl: baseUrl,
-          promptTemplate: formData.promptTemplate,
-          category: formData.category,
-          tags,
-          modelName: formData.modelName,
-          numCharacters: formData.numCharacters,
-          licenseType: formData.licenseType,
-          licenseRestrictions: [],
-          isPublished,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -226,9 +296,15 @@ export default function StudioPage() {
       }
 
       const data = await res.json();
-      toast.success(isPublished ? t('templatePublished') : t('draftSaved'));
-      if (isPublished && data.id) {
-        router.push(`/template/${data.id}`);
+      toast.success(
+        isEditMode ? t('templateUpdated') : isPublished ? t('templatePublished') : t('draftSaved')
+      );
+
+      const redirectId = isEditMode ? templateId : data.id;
+      if (isPublished && redirectId) {
+        router.push(`/template/${redirectId}`);
+      } else if (isEditMode) {
+        router.push(`/profile/templates`);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('submitFailed'));
@@ -239,10 +315,18 @@ export default function StudioPage() {
 
   const canAddMoreImages = characterImages.length < formData.numCharacters;
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="mb-8 text-3xl font-bold">{t('title')}</h1>
+        <h1 className="mb-8 text-3xl font-bold">{isEditMode ? t('editTemplate') : t('title')}</h1>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Sidebar - Settings */}

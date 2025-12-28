@@ -130,6 +130,12 @@ export default function ProfileTemplatesPage() {
                   {template.description}
                 </p>
                 <div className="flex gap-2">
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={`/studio?templateId=${template.id}`}>
+                      <Edit className="mr-1 h-4 w-4" />
+                      {t('templates.editAction')}
+                    </Link>
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"

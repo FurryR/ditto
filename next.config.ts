@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+    // Use custom loader to handle /api/ routes
+    loader: 'custom',
+    loaderFile: './lib/image-loader.ts',
   },
 };
 

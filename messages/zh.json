@@ -92,6 +92,11 @@
     "submitting": "提交中…",
     "publishTemplate": "发布模板",
 
+    "editTemplate": "编辑模板",
+    "templateUpdated": "模板已更新。",
+    "loadTemplateFailed": "加载模板失败。",
+    "noPermission": "你没有权限编辑此模板。",
+
     "pleaseSignIn": "请先登录。",
     "pleaseUploadBaseImage": "请先上传基础图。",
     "pleaseFillRequired": "请填写必填项。",
@@ -176,6 +181,7 @@
       "noTemplates": "你还没有创建模板。",
       "createFirst": "创建第一个模板",
       "publishedBadge": "已发布",
+      "editAction": "编辑",
       "unpublishAction": "取消发布",
       "publishAction": "发布"
     },

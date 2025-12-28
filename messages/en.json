@@ -92,6 +92,11 @@
     "submitting": "Submitting…",
     "publishTemplate": "Publish template",
 
+    "editTemplate": "Edit template",
+    "templateUpdated": "Template updated.",
+    "loadTemplateFailed": "Failed to load template.",
+    "noPermission": "You don't have permission to edit this template.",
+
     "pleaseSignIn": "Please sign in first.",
     "pleaseUploadBaseImage": "Please upload a base image.",
     "pleaseFillRequired": "Please fill in required fields.",
@@ -177,7 +182,8 @@
       "createFirst": "Create your first template",
       "publishedBadge": "Published",
       "unpublishAction": "Unpublish",
-      "publishAction": "Publish"
+      "publishAction": "Publish",
+      "editAction": "Edit"
     },
     "works": {
       "title": "My works",

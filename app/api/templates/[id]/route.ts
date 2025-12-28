@@ -26,6 +26,7 @@ interface UpdatePayload {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const currentUserId = await getCurrentUserId();
     const templatesRepo = await getRepository(Template);
 
     // Get template with author and stats
@@ -38,7 +39,37 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
-    // Increment view count
+    // Check if user is requesting edit access
+    const isEditRequest = request.nextUrl.searchParams.get('edit') === 'true';
+
+    if (isEditRequest) {
+      // Require authentication for edit access
+      if (!currentUserId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // Only allow author to edit
+      if (template.authorId !== currentUserId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      // Return full template including promptTemplate for editing
+      const stats = template.stats
+        ? {
+            ...template.stats,
+            averageRating: Number(template.stats.averageRating) || 0,
+          }
+        : undefined;
+
+      return NextResponse.json({
+        template: {
+          ...template,
+          stats,
+        },
+      });
+    }
+
+    // Increment view count for public view
     const statsRepo = await getRepository(TemplateStats);
     await statsRepo.increment({ templateId: id }, 'viewsCount', 1);
 
@@ -72,7 +103,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Filter out current template
     const filtered = relatedTemplates.filter((t) => t.id !== id);
 
-    // Remove prompt template from response for security
+    // Remove prompt template from response for security (public view)
     const { promptTemplate, ...templateWithoutPrompt } = template;
 
     // Convert averageRating from decimal string to number

@@ -92,6 +92,11 @@
     "submitting": "送信中…",
     "publishTemplate": "公開する",
 
+    "editTemplate": "テンプレートを編集",
+    "templateUpdated": "テンプレートを更新しました。",
+    "loadTemplateFailed": "テンプレートの読み込みに失敗しました。",
+    "noPermission": "このテンプレートを編集する権限がありません。",
+
     "pleaseSignIn": "先にサインインしてください。",
     "pleaseUploadBaseImage": "ベース画像をアップロードしてください。",
     "pleaseFillRequired": "必須項目を入力してください。",
@@ -176,6 +181,7 @@
       "noTemplates": "まだテンプレートがありません。",
       "createFirst": "最初のテンプレートを作成",
       "publishedBadge": "公開中",
+      "editAction": "編集",
       "unpublishAction": "非公開",
       "publishAction": "公開"
     },

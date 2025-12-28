@@ -9,10 +9,10 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { bucket: string; path: string[] } }
+  { params }: { params: Promise<{ bucket: string; path: string[] }> }
 ) {
   try {
-    const { bucket, path } = params;
+    const { bucket, path } = await params;
     const filePath = path.join('/');
 
     // Validate bucket name to prevent unauthorized access

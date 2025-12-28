@@ -14,7 +14,17 @@ import { UseTemplateDialog } from '@/components/UseTemplateDialog';
 import { ShareDialog } from '@/components/ShareDialog';
 import { ReportDialog } from '@/components/ReportDialog';
 import { ReviewsComponent } from '@/components/ReviewsComponent';
-import { Heart, Share2, Eye, Sparkles, Flag, Download, Star, MessageCircle } from 'lucide-react';
+import {
+  Heart,
+  Share2,
+  Eye,
+  Sparkles,
+  Flag,
+  Download,
+  Star,
+  MessageCircle,
+  Edit,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TemplateStats {
@@ -54,12 +64,17 @@ interface Template {
 
 interface UserWork {
   id: string;
-  work_image_url: string;
-  created_at: string;
-  user_id: string;
-  profiles?: {
-    username: string;
-    avatar_url: string;
+  imageUrl: string;
+  title?: string;
+  createdAt: string;
+  userId: string;
+  likesCount?: number;
+  commentsCount?: number;
+  viewsCount?: number;
+  user?: {
+    githubUsername?: string;
+    avatarUrl?: string;
+    displayName?: string;
   };
 }
 
@@ -241,6 +256,15 @@ export default function TemplatePage() {
             <div className="flex items-start justify-between gap-4">
               <h1 className="text-3xl font-bold">{template.name}</h1>
               <div className="flex gap-2">
+                {user && user.id === template.authorId && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => router.push(`/studio?templateId=${template.id}`)}
+                  >
+                    <Edit />
+                  </Button>
+                )}
                 <Button variant={isLiked ? 'default' : 'outline'} size="icon" onClick={handleLike}>
                   <Heart className={isLiked ? 'fill-current' : ''} />
                 </Button>
@@ -255,14 +279,15 @@ export default function TemplatePage() {
 
             {/* Stats */}
             <div className="text-muted-foreground flex gap-6 text-sm">
-              {stats.averageRating && stats.averageRating > 0 && (
-                <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>
-                    {stats.averageRating.toFixed(1)} ({stats.reviewsCount || 0})
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span>
+                  {stats.averageRating && stats.averageRating > 0
+                    ? stats.averageRating.toFixed(1)
+                    : '5.0'}{' '}
+                  ({stats.reviewsCount || 0})
+                </span>
+              </div>
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
                 <span>
@@ -342,13 +367,13 @@ export default function TemplatePage() {
                       onClick={() => router.push(`/works/${work.id}`)}
                     >
                       <div className="space-y-2">
-                        <div className="bg-muted relative w-full overflow-hidden rounded-lg">
+                        <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-lg">
                           <Image
                             src={work.imageUrl}
                             alt={work.title || 'User work'}
-                            width={400}
-                            height={400}
-                            className="h-auto w-full object-cover transition-transform group-hover:scale-105"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                            className="object-cover transition-transform group-hover:scale-105"
                           />
                           {/* Stats overlay */}
                           <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent p-2">
@@ -372,7 +397,7 @@ export default function TemplatePage() {
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={work.user.avatar} />
+                                <AvatarImage src={work.user.avatarUrl} />
                                 <AvatarFallback>{work.user.githubUsername?.[0]}</AvatarFallback>
                               </Avatar>
                               <span className="text-muted-foreground text-sm">
@@ -502,14 +527,17 @@ export default function TemplatePage() {
                     >
                       <div className="bg-muted relative mb-2 aspect-video overflow-hidden rounded-lg">
                         <Image
-                          src={related.base_image_url}
+                          src={related.baseImageUrl}
                           alt={related.name}
                           fill
                           className="object-cover transition-transform group-hover:scale-105"
                         />
                       </div>
                       <h4 className="line-clamp-1 text-sm font-medium">{related.name}</h4>
-                      <p className="text-muted-foreground text-xs">@{related.profiles.username}</p>
+                      <p className="text-muted-foreground text-xs">
+                        @
+                        {related.author?.githubUsername || related.author?.displayName || 'unknown'}
+                      </p>
                     </div>
                   ))}
                 </div>
