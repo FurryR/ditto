@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,27 +35,18 @@ export default function MyWorksPage() {
   const tCommon = useTranslations('common');
   const tProfile = useTranslations('profile');
   const { user } = useUserStore();
-  const [works, setWorks] = useState<Work[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Use SWR to fetch works
+  const { data: works = [], error, mutate } = useSWR<Work[]>(user ? '/api/works' : null, fetcher);
+
+  const loading = !works && !error;
 
   useEffect(() => {
-    if (!user) return;
-    fetchWorks();
-  }, [user]);
-
-  const fetchWorks = async () => {
-    try {
-      const response = await fetch('/api/works');
-      if (!response.ok) throw new Error('Failed to fetch works');
-      const data = await response.json();
-      setWorks(data);
-    } catch (error) {
+    if (error) {
       console.error('Error fetching works:', error);
       toast.error(tProfile('works.loadError') || 'Failed to load works');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error, tProfile]);
 
   const handleDelete = async (workId: string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -69,7 +62,7 @@ export default function MyWorksPage() {
 
       if (!response.ok) throw new Error('Failed to delete work');
 
-      setWorks(works.filter((w) => w.id !== workId));
+      mutate(); // Revalidate works
       toast.success(tProfile('works.deleteSuccess') || 'Work deleted successfully');
     } catch (error) {
       console.error('Error deleting work:', error);

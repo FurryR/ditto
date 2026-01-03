@@ -1,7 +1,9 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProfileView, type ProfileRow } from '@/components/ProfileView';
@@ -10,42 +12,19 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userNa
   const resolvedParams = use(params);
   const t = useTranslations('profile');
 
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<ProfileRow | null>(null);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [works, setWorks] = useState<any[]>([]);
+  // Use SWR to fetch profile data
+  const { data, error } = useSWR(`/api/profile/${resolvedParams.userName}`, fetcher);
+
+  const loading = !data && !error;
+  const profile: ProfileRow | null = data?.profile || null;
+  const templates = data?.templates || [];
+  const works = data?.works || [];
 
   useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-
-      try {
-        const response = await fetch(`/api/profile/${resolvedParams.userName}`);
-
-        if (!response.ok) {
-          setProfile(null);
-          setTemplates([]);
-          setWorks([]);
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-        setProfile(data.profile);
-        setTemplates(data.templates || []);
-        setWorks(data.works || []);
-      } catch (error) {
-        console.error('Failed to load profile:', error);
-        setProfile(null);
-        setTemplates([]);
-        setWorks([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAll();
-  }, [resolvedParams.userName]);
+    if (error) {
+      console.error('Failed to load profile:', error);
+    }
+  }, [error]);
 
   if (loading) {
     return (

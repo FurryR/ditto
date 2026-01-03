@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { useUserStore } from '@/store/userStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,72 +32,61 @@ export default function FollowsPage({ params }: { params: Promise<{ userName: st
   const tCommon = useTranslations('common');
   const { user } = useUserStore();
 
-  const [loading, setLoading] = useState(true);
-  const [profileId, setProfileId] = useState<string | null>(null);
-  const [users, setUsers] = useState<UserProfile[]>([]);
   const [followStates, setFollowStates] = useState<Record<string, boolean>>({});
   const [processingFollow, setProcessingFollow] = useState<Record<string, boolean>>({});
 
+  // First, get the profile ID from the username
+  const { data: profileData } = useSWR(`/api/profile/${resolvedParams.userName}`, fetcher);
+
+  const profileId = profileData?.profile?.id;
+
+  // Then fetch the appropriate list
+  const endpoint = profileId
+    ? tab === 'following'
+      ? `/api/users/${profileId}/following`
+      : `/api/users/${profileId}/followers`
+    : null;
+
+  const { data: usersData, error, mutate } = useSWR(endpoint, fetcher);
+
+  const loading = !usersData && !error && !profileData;
+  const users: UserProfile[] = usersData?.users || [];
+
+  // Check follow status for each user
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    if (!user?.id || !users.length) return;
 
-      try {
-        // First, get the profile ID from the username
-        const profileResponse = await fetch(`/api/profile/${resolvedParams.userName}`);
+    const checkFollowStates = async () => {
+      const states: Record<string, boolean> = {};
+      await Promise.all(
+        users.map(async (u: UserProfile) => {
+          if (u.id === user.id) {
+            states[u.id] = false;
+            return;
+          }
 
-        if (!profileResponse.ok) {
-          toast.error(t('userNotFound'));
-          setLoading(false);
-          return;
-        }
-
-        const profileData = await profileResponse.json();
-        const userId = profileData.profile.id;
-        setProfileId(userId);
-
-        // Then fetch the appropriate list
-        const endpoint =
-          tab === 'following' ? `/api/users/${userId}/following` : `/api/users/${userId}/followers`;
-
-        const response = await fetch(endpoint);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch users');
-        }
-
-        const data = await response.json();
-        setUsers(data.users || []);
-
-        // If current user is logged in, check follow status for each user
-        if (user?.id) {
-          const states: Record<string, boolean> = {};
-          await Promise.all(
-            (data.users || []).map(async (u: UserProfile) => {
-              if (u.id === user.id) {
-                states[u.id] = false;
-                return;
-              }
-
-              const followResponse = await fetch(`/api/users/${u.id}/follow`);
-              if (followResponse.ok) {
-                const followData = await followResponse.json();
-                states[u.id] = followData.isFollowing;
-              }
-            })
-          );
-          setFollowStates(states);
-        }
-      } catch (error) {
-        console.error('Failed to load follows:', error);
-        toast.error(t('loadFollowsError'));
-      } finally {
-        setLoading(false);
-      }
+          try {
+            const followResponse = await fetch(`/api/users/${u.id}/follow`);
+            if (followResponse.ok) {
+              const followData = await followResponse.json();
+              states[u.id] = followData.isFollowing;
+            }
+          } catch (error) {
+            console.error(`Failed to check follow status for user ${u.id}:`, error);
+          }
+        })
+      );
+      setFollowStates(states);
     };
 
-    fetchData();
-  }, [resolvedParams.userName, tab, t, user?.id]);
+    checkFollowStates();
+  }, [user?.id, users]);
+
+  useEffect(() => {
+    if (error || (!profileData && !loading)) {
+      toast.error(t('userNotFound'));
+    }
+  }, [error, profileData, loading, t]);
 
   const handleFollow = async (targetUserId: string) => {
     if (!user?.id) {

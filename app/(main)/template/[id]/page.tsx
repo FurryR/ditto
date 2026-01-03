@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/userStore';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -84,11 +86,6 @@ export default function TemplatePage() {
   const t = useTranslations('template');
   const { user } = useUserStore();
 
-  const [template, setTemplate] = useState<any>(null);
-  const [userWorks, setUserWorks] = useState<any[]>([]);
-  const [relatedTemplates, setRelatedTemplates] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [useDialogOpen, setUseDialogOpen] = useState(false);
@@ -97,73 +94,61 @@ export default function TemplatePage() {
 
   const templateId = params.id as string;
 
+  // Use SWR to fetch template data
+  const {
+    data: templateData,
+    error: templateError,
+    mutate: mutateTemplate,
+  } = useSWR(templateId ? `/api/templates/${templateId}` : null, fetcher);
+
+  // Use SWR to fetch reviews
+  const { data: reviewsData, mutate: mutateReviews } = useSWR(
+    templateId ? `/api/templates/${templateId}/reviews` : null,
+    fetcher
+  );
+
+  // Use SWR to fetch like status
+  const { data: likeData } = useSWR(
+    user && templateId ? `/api/templates/${templateId}/like` : null,
+    fetcher
+  );
+
+  // Use SWR to fetch follow status
+  const { data: followData } = useSWR(
+    user && templateData?.template?.authorId
+      ? `/api/users/${templateData.template.authorId}/follow`
+      : null,
+    fetcher
+  );
+
+  const loading = !templateData && !templateError;
+  const template = templateData?.template;
+  const userWorks = templateData?.userWorks || [];
+  const relatedTemplates = templateData?.relatedTemplates || [];
+  const reviews = reviewsData?.reviews || [];
+
+  // Update like status from SWR data
   useEffect(() => {
-    if (templateId) {
-      fetchTemplateData();
-      fetchReviews();
-      if (user) {
-        checkLikeStatus();
-        checkFollowStatus();
-      }
+    if (likeData !== undefined) {
+      setIsLiked(likeData.isLiked);
     }
-  }, [templateId, user]);
+  }, [likeData]);
 
-  const fetchTemplateData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/templates/${templateId}`);
-      if (!response.ok) throw new Error('Failed to fetch template');
+  // Update follow status from SWR data
+  useEffect(() => {
+    if (followData !== undefined) {
+      setIsFollowing(followData.isFollowing);
+    }
+  }, [followData]);
 
-      const data = await response.json();
-      setTemplate(data.template);
-      setUserWorks(data.userWorks || []);
-      setRelatedTemplates(data.relatedTemplates || []);
-    } catch (error) {
-      console.error('Error fetching template:', error);
+  // Handle errors
+  useEffect(() => {
+    if (templateError) {
+      console.error('Error fetching template:', templateError);
       toast.error(t('fetchError'));
       router.push('/templates');
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const fetchReviews = async () => {
-    try {
-      const response = await fetch(`/api/templates/${templateId}/reviews`);
-      if (response.ok) {
-        const data = await response.json();
-        setReviews(data.reviews || []);
-      }
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-    }
-  };
-
-  const checkLikeStatus = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/templates/${templateId}/like`);
-      if (response.ok) {
-        const data = await response.json();
-        setIsLiked(data.isLiked);
-      }
-    } catch (error) {
-      console.error('Error checking like status:', error);
-    }
-  };
-
-  const checkFollowStatus = async () => {
-    if (!user || !template) return;
-    try {
-      const response = await fetch(`/api/users/${template.authorId}/follow`);
-      if (response.ok) {
-        const data = await response.json();
-        setIsFollowing(data.isFollowing);
-      }
-    } catch (error) {
-      console.error('Error checking follow status:', error);
-    }
-  };
+  }, [templateError, t, router]);
 
   const handleLike = async () => {
     if (!user) {
@@ -179,7 +164,7 @@ export default function TemplatePage() {
 
       setIsLiked(!isLiked);
       toast.success(isLiked ? t('unliked') : t('liked'));
-      fetchTemplateData();
+      mutateTemplate(); // Revalidate template data
     } catch (error) {
       console.error('Error toggling like:', error);
       toast.error(t('likeError'));
@@ -226,6 +211,24 @@ export default function TemplatePage() {
   }
 
   if (!template) return null;
+
+  // Check if user has permission to view this template
+  const isOwner = user?.id === template.authorId;
+  const canView = template.isPublished || isOwner;
+
+  if (!canView) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="mb-4 text-2xl font-bold">{t('notPublished') || 'Template Not Published'}</h1>
+        <p className="text-muted-foreground mb-8">
+          {t('notPublishedDescription') || 'This template is not published and cannot be viewed.'}
+        </p>
+        <Button onClick={() => router.push('/templates')}>
+          {t('backToTemplates') || 'Back to Templates'}
+        </Button>
+      </div>
+    );
+  }
 
   const stats = template.stats || {
     viewsCount: 0,
@@ -360,7 +363,7 @@ export default function TemplatePage() {
               <h2 className="mb-4 text-xl font-semibold">{t('createdWith')}</h2>
               {userWorks.length > 0 ? (
                 <div className="columns-1 gap-4 space-y-4 sm:columns-2 md:columns-3">
-                  {userWorks.map((work) => (
+                  {userWorks.map((work: UserWork) => (
                     <div
                       key={work.id}
                       className="group mb-4 cursor-pointer break-inside-avoid"
@@ -510,7 +513,7 @@ export default function TemplatePage() {
           <ReviewsComponent
             templateId={templateId}
             reviews={reviews}
-            onReviewsUpdate={fetchReviews}
+            onReviewsUpdate={mutateReviews}
           />
 
           {/* Related Templates */}
@@ -519,7 +522,7 @@ export default function TemplatePage() {
               <CardContent className="pt-6">
                 <h3 className="mb-4 font-semibold">{t('relatedTemplates')}</h3>
                 <div className="space-y-4">
-                  {relatedTemplates.slice(0, 3).map((related) => (
+                  {relatedTemplates.slice(0, 3).map((related: Template) => (
                     <div
                       key={related.id}
                       className="group cursor-pointer"

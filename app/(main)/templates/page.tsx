@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,10 +25,30 @@ type ExtendedTemplate = Template & {
 
 export default function TemplatesPage() {
   const t = useTranslations('templates');
-  const [templates, setTemplates] = useState<ExtendedTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Use SWR to fetch templates
+  const { data, error } = useSWR('/api/templates', fetcher);
+
+  const loading = !data && !error;
+  const templates: ExtendedTemplate[] = data
+    ? data.map((tpl: any) => ({
+        ...tpl,
+        viewsCount: tpl.stats?.viewsCount ?? 0,
+        likesCount: tpl.stats?.likesCount ?? 0,
+        usesCount: tpl.stats?.usesCount ?? 0,
+        averageRating: tpl.stats?.averageRating ?? 0,
+        reviewsCount: tpl.stats?.reviewsCount ?? 0,
+      }))
+    : [];
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching templates:', error);
+      toast.error(t('loadError'));
+    }
+  }, [error, t]);
 
   const categories = [
     { id: 'all', label: t('filterAll') },
@@ -36,34 +58,11 @@ export default function TemplatesPage() {
     { id: 'album-art', label: t('filterAlbumArt') },
   ];
 
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/templates');
-        if (!response.ok) throw new Error('Failed to fetch templates');
-        const data = await response.json();
-
-        const mapped: ExtendedTemplate[] = data.map((tpl: any) => ({
-          ...tpl,
-          viewsCount: tpl.stats?.viewsCount ?? 0,
-          likesCount: tpl.stats?.likesCount ?? 0,
-          usesCount: tpl.stats?.usesCount ?? 0,
-          averageRating: tpl.stats?.averageRating ?? 0,
-          reviewsCount: tpl.stats?.reviewsCount ?? 0,
-        }));
-        setTemplates(mapped);
-      } catch (error) {
-        console.error('Error fetching templates:', error);
-        toast.error(t('loadError'));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTemplates();
-  }, [t]);
-
   const filteredTemplates = templates.filter((template) => {
+    // Filter out unpublished templates (they should not appear in public search)
+    if (!template.isPublished) {
+      return false;
+    }
     const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
     const matchesSearch =
       !searchQuery ||

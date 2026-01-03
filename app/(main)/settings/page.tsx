@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useUserStore } from '@/store/userStore';
 import { toast } from 'sonner';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,62 +47,49 @@ function SettingsPageContent() {
   const searchParams = useSearchParams();
   const { user } = useUserStore();
 
-  const [loading, setLoading] = useState(true);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [openRouterConnected, setOpenRouterConnected] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
 
+  // Use SWR to fetch settings
+  const { data: settingsData, error, mutate } = useSWR(user?.id ? '/api/settings' : null, fetcher);
+
+  const loading = !settingsData && !error;
+
+  // Update state when data changes
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
+    if (settingsData) {
+      const links = settingsData.socialLinks || {};
+      const linkArray: SocialLink[] = [];
 
-      setLoading(true);
-
-      try {
-        const response = await fetch('/api/settings');
-        if (!response.ok) {
-          throw new Error('Failed to fetch settings');
-        }
-
-        const data = await response.json();
-
-        if (data) {
-          const links = data.socialLinks || {};
-          const linkArray: SocialLink[] = [];
-
-          Object.entries(links).forEach(([key, value]) => {
-            if (key !== 'banner' && key !== 'github' && value) {
-              linkArray.push({
-                id: key,
-                platform: key,
-                url: String(value),
-              });
-            }
+      Object.entries(links).forEach(([key, value]) => {
+        if (key !== 'banner' && key !== 'github' && value) {
+          linkArray.push({
+            id: key,
+            platform: key,
+            url: String(value),
           });
-
-          // Sort by platform
-          linkArray.sort((a, b) => a.platform.localeCompare(b.platform));
-          setSocialLinks(linkArray);
-
-          // Check if OpenRouter is connected
-          const apiSettings = data.apiSettings || {};
-          setOpenRouterConnected(!!apiSettings.openrouter_key);
         }
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-        toast.error(t('loadFailed'));
-      }
+      });
 
-      setLoading(false);
-    };
+      // Sort by platform
+      linkArray.sort((a, b) => a.platform.localeCompare(b.platform));
+      setSocialLinks(linkArray);
 
-    fetchProfile();
-  }, [user?.id, t]);
+      // Check if OpenRouter is connected
+      const apiSettings = settingsData.apiSettings || {};
+      setOpenRouterConnected(!!apiSettings.openrouter_key);
+    }
+  }, [settingsData]);
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching settings:', error);
+      toast.error(t('loadFailed'));
+    }
+  }, [error, t]);
 
   useEffect(() => {
     // Check for OAuth success/error
@@ -193,6 +182,7 @@ function SettingsPageContent() {
       setSocialLinks(updatedLinks.sort((a, b) => a.platform.localeCompare(b.platform)));
       setNewLinkUrl('');
       toast.success(t('linkAdded'));
+      mutate(); // Revalidate SWR cache
     } catch (error) {
       console.error('Error adding link:', error);
       toast.error(t('updateFailed'));
@@ -222,6 +212,7 @@ function SettingsPageContent() {
 
       setSocialLinks(updatedLinks);
       toast.success(t('linkRemoved'));
+      mutate(); // Revalidate SWR cache
     } catch (error) {
       console.error('Error removing link:', error);
       toast.error(t('updateFailed'));
@@ -288,6 +279,7 @@ function SettingsPageContent() {
 
       setOpenRouterConnected(false);
       toast.success(t('openRouterDisconnected'));
+      mutate(); // Revalidate SWR cache
     } catch (error) {
       console.error('Error disconnecting OpenRouter:', error);
       toast.error(t('updateFailed'));

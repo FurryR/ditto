@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { useUserStore } from '@/store/userStore';
 import { useTranslations } from 'next-intl';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -36,29 +38,22 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
   const t = useTranslations('workComments');
   const tCommon = useTranslations('common');
 
-  const [comments, setComments] = useState<WorkComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchComments();
-  }, [workId]);
+  // Use SWR to fetch comments
+  const { data: commentsData, error, mutate } = useSWR(`/api/works/${workId}/comments`, fetcher);
 
-  const fetchComments = async () => {
-    try {
-      const response = await fetch(`/api/works/${workId}/comments`);
-      if (!response.ok) throw new Error('Failed to fetch comments');
-      const data = await response.json();
-      setComments(data.comments || []);
-    } catch (error) {
+  const loading = !commentsData && !error;
+  const comments: WorkComment[] = commentsData?.comments || [];
+
+  useEffect(() => {
+    if (error) {
       console.error('Error fetching comments:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error]);
 
   const handleSubmitComment = async () => {
     if (!user) {
@@ -82,8 +77,7 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
 
       if (!response.ok) throw new Error('Failed to post comment');
 
-      const data = await response.json();
-      setComments([data.comment, ...comments]);
+      mutate(); // Revalidate comments
       setNewComment('');
       toast.success(t('commentPosted') || 'Comment posted successfully');
     } catch (error) {
@@ -116,21 +110,7 @@ export function WorkCommentsComponent({ workId }: WorkCommentsComponentProps) {
 
       if (!response.ok) throw new Error('Failed to post reply');
 
-      const data = await response.json();
-
-      // Update comments with new reply
-      setComments(
-        comments.map((comment) => {
-          if (comment.id === parentId) {
-            return {
-              ...comment,
-              replies: [...(comment.replies || []), data.comment],
-            };
-          }
-          return comment;
-        })
-      );
-
+      mutate(); // Revalidate comments
       setReplyContent('');
       setReplyTo(null);
       toast.success(t('replyPosted') || 'Reply posted successfully');

@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,29 +14,20 @@ import { Github, Twitter, Globe } from 'lucide-react';
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const t = useTranslations('user');
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [templates, setTemplates] = useState<any[]>([]);
+
+  // Use SWR to fetch user profile
+  const { data, error } = useSWR(`/api/profile/${params.username}`, fetcher);
+
+  const loading = !data && !error;
+  const user = data?.profile;
+  const templates = data?.templates || [];
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(`/api/profile/${params.username}`);
-        if (!response.ok) throw new Error('User not found');
-
-        const data = await response.json();
-        setUser(data.profile);
-        setTemplates(data.templates || []);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        toast.error(t('userNotFound'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [params.username, t]);
+    if (error) {
+      console.error('Error fetching user:', error);
+      toast.error(t('userNotFound'));
+    }
+  }, [error, t]);
 
   if (loading) {
     return (
@@ -102,7 +95,7 @@ export default function UserProfilePage({ params }: { params: { username: string
         <p className="text-muted-foreground py-8 text-center">{t('noPublicTemplates')}</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {templates.map((template) => (
+          {templates.map((template: any) => (
             <Link key={template.id} href={`/template/${template.id}`}>
               <Card className="group overflow-hidden transition-all hover:shadow-lg">
                 <div className="bg-muted relative aspect-[4/3] overflow-hidden">

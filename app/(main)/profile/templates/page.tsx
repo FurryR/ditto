@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,28 +17,22 @@ import { Trash2, Edit, Eye, EyeOff } from 'lucide-react';
 export default function ProfileTemplatesPage() {
   const t = useTranslations('profile');
   const { user } = useUserStore();
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const fetchTemplates = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const response = await fetch('/api/templates?authorId=' + user.id);
-      if (!response.ok) throw new Error('Failed to fetch templates');
-      const data = await response.json();
-      setTemplates(data);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      toast.error(t('templates.loadError'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use SWR to fetch templates
+  const {
+    data: templates = [],
+    error,
+    mutate,
+  } = useSWR(user ? `/api/templates?authorId=${user.id}` : null, fetcher);
+
+  const loading = !templates && !error;
 
   useEffect(() => {
-    fetchTemplates();
-  }, [user]);
+    if (error) {
+      console.error('Error fetching templates:', error);
+      toast.error(t('templates.loadError'));
+    }
+  }, [error, t]);
 
   const handleTogglePublish = async (id: string, currentStatus: boolean) => {
     try {
@@ -49,7 +45,7 @@ export default function ProfileTemplatesPage() {
       if (!response.ok) throw new Error('Failed to update template');
 
       toast.success(currentStatus ? t('templates.unpublished') : t('templates.published'));
-      fetchTemplates();
+      mutate(); // Revalidate templates
     } catch (error) {
       console.error('Error toggling publish:', error);
       toast.error(t('templates.operationFailed'));
@@ -63,7 +59,7 @@ export default function ProfileTemplatesPage() {
       if (!response.ok) throw new Error('Failed to delete template');
 
       toast.success(t('templates.deleted'));
-      fetchTemplates();
+      mutate(); // Revalidate templates
     } catch (error) {
       console.error('Error deleting template:', error);
       toast.error(t('templates.deleteError'));
@@ -111,7 +107,7 @@ export default function ProfileTemplatesPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((template) => (
+          {templates.map((template: any) => (
             <Card key={template.id} className="overflow-hidden">
               <div className="bg-muted relative aspect-[4/3] overflow-hidden">
                 <Image

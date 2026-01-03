@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { useUserStore } from '@/store/userStore';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,54 +15,34 @@ export default function ProfilePage() {
   const t = useTranslations('profile');
   const { user } = useUserStore();
 
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<ProfileRow | null>(null);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [works, setWorks] = useState<any[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      if (!user?.id) {
-        setProfile(null);
-        setTemplates([]);
-        setWorks([]);
-        setLoading(false);
-        return;
-      }
+  // Use SWR to fetch profile data
+  const { data, error, mutate } = useSWR(user?.id ? '/api/profile' : null, fetcher);
 
-      setLoading(true);
-
-      try {
-        const response = await fetch('/api/profile');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
-        }
-
-        const data = await response.json();
-        setProfile(data.profile);
-        setTemplates(data.templates || []);
-        setWorks(data.works || []);
-      } catch (error) {
-        console.error('Failed to load profile:', error);
-        toast.error(t('loadProfileError'));
-        setProfile({
+  const loading = !data && !error;
+  const profile: ProfileRow | null =
+    data?.profile ||
+    (user
+      ? {
           id: user.id,
           githubUsername: user.githubUsername || null,
           avatarUrl: user.avatar || null,
           displayName: user.name || null,
           bio: user.bio || null,
           socialLinks: (user.socialLinks || {}) as any,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+        }
+      : null);
+  const templates = data?.templates || [];
+  const works = data?.works || [];
 
-    fetchAll();
-  }, [t, user?.id, user?.avatar, user?.bio, user?.githubUsername, user?.name, user?.socialLinks]);
+  useEffect(() => {
+    if (error) {
+      console.error('Failed to load profile:', error);
+      toast.error(t('loadProfileError'));
+    }
+  }, [error, t]);
 
   if (!user) {
     return (
@@ -93,7 +75,7 @@ export default function ProfilePage() {
 
       toast.success(t('savedToast'));
       setEditOpen(false);
-      setProfile(data.profile);
+      mutate(); // Revalidate profile data
     } catch (e) {
       toast.error(t('saveProfileError'));
     } finally {
@@ -120,7 +102,7 @@ export default function ProfilePage() {
       social.banner = data.url;
 
       toast.success(t('bannerUploaded'));
-      setProfile((prev) => (prev ? { ...prev, socialLinks: social } : prev));
+      mutate(); // Revalidate profile data
     } catch (e) {
       toast.error(t('uploadFailed'));
     }
@@ -141,7 +123,7 @@ export default function ProfilePage() {
       const data = await response.json();
 
       toast.success(t('savedToast'));
-      setProfile(data.profile);
+      mutate(); // Revalidate profile data
     } catch (e) {
       toast.error(t('saveProfileError'));
     }

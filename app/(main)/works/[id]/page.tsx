@@ -6,6 +6,8 @@ import { useUserStore } from '@/store/userStore';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +27,8 @@ import {
   MessageCircle,
   Flag,
   Eye,
+  Upload,
+  EyeOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -51,8 +55,6 @@ export default function WorkPage() {
   const tCommon = useTranslations('common');
   const { user } = useUserStore();
 
-  const [work, setWork] = useState<Work | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -62,45 +64,41 @@ export default function WorkPage() {
 
   const workId = params.id as string;
 
+  // Use SWR to fetch work data
+  const {
+    data: work,
+    error,
+    mutate,
+  } = useSWR<Work>(workId ? `/api/works/${workId}` : null, fetcher);
+
+  // Use SWR to fetch like status
+  const { data: likeData } = useSWR(user && workId ? `/api/works/${workId}/like` : null, fetcher);
+
+  const loading = !work && !error;
+
+  // Update edit fields when work data changes
   useEffect(() => {
-    if (workId) {
-      fetchWork();
-      if (user) {
-        checkLikeStatus();
-      }
+    if (work) {
+      setEditTitle(work.title || '');
+      setEditDescription(work.description || '');
     }
-  }, [workId, user]);
+  }, [work]);
 
-  const fetchWork = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/works/${workId}`);
-      if (!response.ok) throw new Error('Failed to fetch work');
+  // Update like status from SWR data
+  useEffect(() => {
+    if (likeData !== undefined) {
+      setIsLiked(likeData.isLiked);
+    }
+  }, [likeData]);
 
-      const data = await response.json();
-      setWork(data);
-      setEditTitle(data.title || '');
-      setEditDescription(data.description || '');
-    } catch (error) {
+  // Handle errors
+  useEffect(() => {
+    if (error) {
       console.error('Error fetching work:', error);
       toast.error(t('fetchError') || 'Failed to load work');
       router.push('/my-works');
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const checkLikeStatus = async () => {
-    try {
-      const response = await fetch(`/api/works/${workId}/like`);
-      if (response.ok) {
-        const data = await response.json();
-        setIsLiked(data.isLiked);
-      }
-    } catch (error) {
-      console.error('Error checking like status:', error);
-    }
-  };
+  }, [error, t, router]);
 
   const handleToggleLike = async () => {
     if (!user) {
@@ -117,13 +115,7 @@ export default function WorkPage() {
 
       const data = await response.json();
       setIsLiked(data.isLiked);
-
-      if (work) {
-        setWork({
-          ...work,
-          likesCount: work.likesCount + (data.isLiked ? 1 : -1),
-        });
-      }
+      mutate(); // Revalidate work data
 
       toast.success(data.isLiked ? t('liked') || 'Liked!' : t('unliked') || 'Unliked');
     } catch (error) {
@@ -164,8 +156,7 @@ export default function WorkPage() {
 
       if (!response.ok) throw new Error('Failed to update work');
 
-      const updatedWork = await response.json();
-      setWork(updatedWork);
+      mutate(); // Revalidate work data
       setIsEditing(false);
       toast.success(t('updateSuccess') || 'Work updated successfully');
     } catch (error) {
@@ -186,8 +177,7 @@ export default function WorkPage() {
 
       if (!response.ok) throw new Error('Failed to update work');
 
-      const updatedWork = await response.json();
-      setWork(updatedWork);
+      mutate(); // Revalidate work data
       setIsEditingDesc(false);
       toast.success(t('updateSuccess') || 'Work updated successfully');
     } catch (error) {
@@ -210,8 +200,8 @@ export default function WorkPage() {
 
       if (!response.ok) throw new Error('Failed to update work');
 
+      mutate(); // Revalidate work data
       const updatedWork = await response.json();
-      setWork(updatedWork);
       toast.success(
         updatedWork.isPublished
           ? t('publishSuccess') || 'Work published successfully'
@@ -269,6 +259,20 @@ export default function WorkPage() {
   }
 
   const isOwner = user?.id === work.userId;
+  const canView = work.isPublished || isOwner;
+
+  // Check if user has permission to view this work
+  if (!canView) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="mb-4 text-2xl font-bold">{t('notPublished') || 'Work Not Published'}</h1>
+        <p className="text-muted-foreground mb-8">
+          {t('notPublishedDescription') || 'This work is not published and cannot be viewed.'}
+        </p>
+        <Button onClick={() => router.back()}>{tCommon('back') || 'Back'}</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -464,7 +468,17 @@ export default function WorkPage() {
                   variant={work.isPublished ? 'outline' : 'default'}
                   className="flex-1"
                 >
-                  {work.isPublished ? t('unpublish') || 'Unpublish' : t('publish') || 'Publish'}
+                  {work.isPublished ? (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      {t('unpublish') || 'Unpublish'}
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {t('publish') || 'Publish'}
+                    </>
+                  )}
                 </Button>
                 <Button onClick={handleDelete} variant="destructive" className="flex-1">
                   <Trash2 className="mr-2 h-4 w-4" />

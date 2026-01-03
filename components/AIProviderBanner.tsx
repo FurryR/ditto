@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { useUserStore } from '@/store/userStore';
 import { X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,42 +14,30 @@ export function AIProviderBanner() {
   const router = useRouter();
   const { user } = useUserStore();
   const [isVisible, setIsVisible] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
+
+  // Use SWR to fetch settings
+  const { data: settingsData, isLoading } = useSWR(user?.id ? '/api/settings' : null, fetcher);
+
+  const isConnected = !!settingsData?.apiSettings?.openrouter_key;
 
   useEffect(() => {
-    const checkConnection = async () => {
-      if (!user?.id) {
-        setIsVisible(false);
-        setIsChecking(false);
-        return;
-      }
+    if (!user?.id) {
+      setIsVisible(false);
+      return;
+    }
 
-      // Check if user has dismissed the banner
-      const dismissed = localStorage.getItem('ai_provider_banner_dismissed');
-      if (dismissed === 'true') {
-        setIsVisible(false);
-        setIsChecking(false);
-        return;
-      }
+    // Check if user has dismissed the banner
+    const dismissed = localStorage.getItem('ai_provider_banner_dismissed');
+    if (dismissed === 'true') {
+      setIsVisible(false);
+      return;
+    }
 
-      try {
-        const response = await fetch('/api/settings');
-        if (response.ok) {
-          const data = await response.json();
-          const hasToken = !!data.apiSettings?.openrouter_key;
-          setIsConnected(hasToken);
-          setIsVisible(!hasToken);
-        }
-      } catch (error) {
-        console.error('Failed to check AI provider connection:', error);
-      } finally {
-        setIsChecking(false);
-      }
-    };
-
-    checkConnection();
-  }, [user?.id]);
+    // Show banner if not connected and data is loaded
+    if (!isLoading && settingsData) {
+      setIsVisible(!isConnected);
+    }
+  }, [user?.id, isLoading, settingsData, isConnected]);
 
   const handleClose = () => {
     localStorage.setItem('ai_provider_banner_dismissed', 'true');
@@ -58,7 +48,7 @@ export function AIProviderBanner() {
     router.push('/settings');
   };
 
-  if (isChecking || !isVisible) {
+  if (isLoading || !isVisible) {
     return null;
   }
 
